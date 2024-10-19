@@ -13,7 +13,7 @@ export default function Home() {
         backgroundSize: 'cover'
       }}
     >
-      <Card sx={{ minWidth: '70%', minHeight: '70%', maxHeight: '80%', backgroundColor: '#F4F5FA' }}>
+      <Card sx={{ minWidth: '70%', maxWidth: '75%', minHeight: '90%', backgroundColor: '#F4F5FA' }}>
         <FlowBuilder />
       </Card>
     </Box>

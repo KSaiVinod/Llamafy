@@ -1,11 +1,24 @@
 import { Editor } from '@monaco-editor/react'
-import { Close } from '@mui/icons-material'
-import { Box, Grid2, IconButton, InputAdornment, OutlinedInput, styled, Typography } from '@mui/material'
+import { Check, CheckCircleOutline, CheckOutlined, Close } from '@mui/icons-material'
+import {
+  Box,
+  Button,
+  Collapse,
+  Fade,
+  Grid2,
+  IconButton,
+  InputAdornment,
+  OutlinedInput,
+  styled,
+  Typography
+} from '@mui/material'
 import { useState } from 'react'
 import MemoMetaAiIcon from '../../public/svg/MetaAiIcon'
 
 import '@/styles/dracula.json'
 import '@/styles/iplastic.json'
+import { useGlobalContext } from '@/context/GlobalContext'
+import Link from 'next/link'
 
 const CustomOutlinedInput = styled(OutlinedInput)(({ theme }) => ({
   borderRadius: '20px'
@@ -60,30 +73,51 @@ const options = {
 
 export const LeftSideForm = () => {
   const [inputValue, setInputValue] = useState('')
+  const [showField, setShowField] = useState(true)
   const [json, setJson] = useState('')
+
+  const { handleGenerateTemplate, handleShowPreview } = useGlobalContext()
   return (
     <Grid2 container paddingInline={'1rem'} spacing={2}>
       <Grid2 item size={12} display={'flex'} alignItems={'center'} justifyContent={'space-between'}>
         <Typography variant={'h6'}>Flow JSON</Typography>
-        <MemoMetaAiIcon width={'2.5em'} height={'2.5em'} />
-      </Grid2>
-      <Grid2 item size={12} width={'100%'} display={'flex'} gap={2}>
-        <CustomOutlinedInput
-          fullWidth
-          multiline
-          size='small'
-          value={inputValue}
-          onChange={e => setInputValue(e?.target?.value)}
-          placeholder={'Ask Llama anything'}
-          startAdornment={
-            <InputAdornment sx={{ mr: '10px' }}>
-              <MemoMetaAiIcon width={'1.5em'} height={'1.5em'} />
-            </InputAdornment>
-          }
-        />
-        <IconButton onClick={() => setInputValue('')}>
-          <Close />
+        <IconButton size='small' onClick={() => setShowField(prev => !prev)}>
+          <MemoMetaAiIcon width={'2.5em'} height={'2.5em'} />
         </IconButton>
+      </Grid2>
+      <Grid2 item size={12} width={'100%'}>
+        <Collapse in={showField}>
+          <Grid2 container>
+            <Grid2 item size={12} width={'100%'} display={'flex'} gap={2} alignItems={'flex-start'}>
+              <CustomOutlinedInput
+                fullWidth
+                multiline
+                size='small'
+                value={inputValue}
+                onChange={e => setInputValue(e?.target?.value)}
+                placeholder={'Ask Llama anything'}
+                sx={{ display: 'flex', alignItems: 'flex-start' }}
+                startAdornment={
+                  <InputAdornment position='start' sx={{ mr: '10px' }}>
+                    <MemoMetaAiIcon width={'1.5em'} height={'1.5em'} />
+                  </InputAdornment>
+                }
+                endAdornment={
+                  <InputAdornment position='end'>
+                    <Fade in={inputValue?.length > 0} unmountOnExit>
+                      <IconButton size='small' color={'success'} onClick={() => handleGenerateTemplate(inputValue)}>
+                        <CheckCircleOutline />
+                      </IconButton>
+                    </Fade>
+                  </InputAdornment>
+                }
+              />
+              <IconButton onClick={() => setInputValue('')}>
+                <Close />
+              </IconButton>
+            </Grid2>
+          </Grid2>
+        </Collapse>
       </Grid2>
       <Grid2 item size={12}>
         <OutlinedBox>
@@ -95,6 +129,11 @@ export const LeftSideForm = () => {
             onChange={value => setJson(value)}
           />
         </OutlinedBox>
+      </Grid2>
+      <Grid2 item size={12} align={'right'}>
+        <Button variant={'contained'} onClick={handleShowPreview}>
+          Show Preview
+        </Button>
       </Grid2>
     </Grid2>
   )
