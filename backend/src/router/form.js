@@ -1,14 +1,9 @@
-const axios = require('axios');
 const express = require('express');
+const axios = require('axios');
 const cheerio = require('cheerio');
-const app = express();
-const port = 3000;
+const router = express.Router();
 
-app.get('/', (req, res) => {
-    res.send('Hello World!');
-});
-
-app.get('/get-form-json', async (req, res) => {
+router.get('/form-json', async (req, res) => {
     const { url } = req.query;
     try {
         const response = await axios.get(url);
@@ -26,9 +21,10 @@ app.get('/get-form-json', async (req, res) => {
         const formTitle = questionsData[1][0];
         const questionsDataArray = questionsData[1][1];
 
-        const questions = questionsDataArray.map((questionData) => {
+        const components = questionsDataArray.map((questionData) => {
             // console.log(JSON.stringify(questionData[4]?.[0]?.[2]));
-
+            let minValidation = null;
+            let maxValidation = null;
             const id = questionData[0];
             const text = questionData[1];
             let type = 'unknown';
@@ -36,6 +32,20 @@ app.get('/get-form-json', async (req, res) => {
             const description = questionData[2];
             const choices = [];
             const required = questionData[4]?.[0]?.[2] === 1;
+            // if (questionData[4] && questionData[4].length >= 3) {
+            if (questionData[4]?.[0]?.[4]?.[0]?.[1] === 200) {
+                minValidation = questionData[4]?.[0]?.[4]?.[0]?.[2]?.[0];
+            } else if (questionData[4]?.[0]?.[4]?.[0]?.[1] === 201) {
+                maxValidation = questionData[4]?.[0]?.[4]?.[0]?.[2]?.[0];
+            } else {
+                minValidation = questionData[4]?.[0]?.[4]?.[0]?.[2]?.[0];
+                maxValidation = questionData[4]?.[0]?.[4]?.[0]?.[2]?.[0];
+            }
+            // minValidation = JSON.stringify();
+            // maxValidation = JSON.stringify(questionData[4]?.[0]?.[4]?.[0]); // 200 = min, 201 = max, 204 = exact
+            // }
+            console.log(minValidation, '\n\n');
+
             let otherInput;
 
             switch (questionData[3]) {
@@ -111,6 +121,8 @@ app.get('/get-form-json', async (req, res) => {
                 type: type,
                 image,
                 required,
+                minValidation,
+                maxValidation,
                 description,
                 choices: choices.length > 0 ? choices : undefined,
                 otherInput
@@ -118,7 +130,7 @@ app.get('/get-form-json', async (req, res) => {
         });
         res.status(200).send({
             title: formTitle,
-            questions: questions
+            components
         });
     } catch (error) {
         console.error('Error scraping form data:', error);
@@ -126,6 +138,4 @@ app.get('/get-form-json', async (req, res) => {
     }
 });
 
-app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`);
-});
+module.exports = router;
