@@ -75,9 +75,9 @@ class FlowController {
     }
   }
 
-  async getStatus() {
+  async getStatus(id) {
     try {
-      const status = redis_handler.getKeys(`Llamafy-status`)
+      const status = await redis_handler.get(`Llamafy-${id}`)
 
       return status
     } catch (error) {
@@ -85,9 +85,9 @@ class FlowController {
     }
   }
 
-  async getGeneratedJSON() {
+  async getGeneratedJSON(id) {
     try {
-      const output = redis_handler.getKeys(`Llamafy-completed`)
+      const output = await redis_handler.get(`Llamafy-${id}-completed`)
 
       return output
     } catch (error) {

@@ -54,21 +54,24 @@ router.get('/flow/status', async (req, res) => {
   const flow = new FlowController()
 
   try {
-    const status = await flow.getStatus()
+    const { job_id } = req.query
+    const status = await flow.getStatus(job_id)
 
-    if (status !== 'completed') {
+    if (status && status !== 'completed') {
       res.status(200).send({
         result: {
           done: false,
+          status: status,
           content: {}
         },
         status: 'ok'
       })
     } else {
-      const result = await flow.getGeneratedJSON()
+      const result = await flow.getGeneratedJSON(job_id)
       res.status(200).send({
         result: {
           done: true,
+          status: 'completed',
           content: result
         },
         status: 'ok'

@@ -1,4 +1,4 @@
-export const EXAMPLE_JSON = {
+const EXAMPLE_JSON = {
   version: '5.1',
   screens: [
     {
@@ -321,3 +321,5 @@ export const EXAMPLE_JSON = {
     }
   ]
 }
+
+module.exports = EXAMPLE_JSON

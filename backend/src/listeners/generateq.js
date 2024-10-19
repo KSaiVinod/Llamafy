@@ -1,13 +1,13 @@
-const Queue = require('../helpers/queues_helper')
 const { Worker } = require('bullmq')
+const EXAMPLE_JSON = require('../data/flow_json')
 const redis_handler = require('../helpers/redis_handler')
-const { EXAMPLE_JSON } = require('../data/flow_json')
+const logger = require('../helpers/logger_helper')('UPLOAD_WORKER')
 
 const connection = {
   port: process.env.REDIS_QUEUE_PORT || 6379,
   host: process.env.REDIS_QUEUE_HOST || 'localhost',
   password: process.env.REDIS_QUEUE_PASSWORD || '',
-  prefix: 'llamafy',
+  prefix: process.env.GENERATEQ_PREFIX,
   enableReadyCheck: false,
   maxRetriesPerRequest: null,
   reconnectonError: true,
@@ -15,8 +15,11 @@ const connection = {
 }
 
 async function listen() {
+  logger.info(`UPLOAD WORKER STARTED 🚀`)
+  logger.info(`Listening to ${process.env.GENERATEQ_NAME}`)
   const worker = new Worker(process.env.GENERATEQ_NAME, processRequest, {
     connection,
+    prefix: process.env.GENERATEQ_PREFIX,
     removeOnComplete: {
       count: 20
     },
@@ -51,22 +54,20 @@ const sleep = ms => {
 
 async function processRequest(job) {
   try {
-    redis_handler.deletekey(`Llamafy-status`)
+    await redis_handler.set(`Llamafy-${job?.id}`, 'Started')
 
-    redis_handler.set(`Llamafy-status`, 'Started')
+    await sleep(10000)
 
-    sleep(100)
+    await redis_handler.set(`Llamafy-${job?.id}`, 'Stage 1')
 
-    redis_handler.set(`Llamafy-status`, 'Stage 1')
+    await sleep(10000)
 
-    sleep(100)
+    await redis_handler.set(`Llamafy-${job?.id}`, 'Stage 2')
 
-    redis_handler.set(`Llamafy-status`, 'Stage 2')
+    await sleep(10000)
 
-    sleep(100)
-
-    redis_handler.set(`Llamafy-status`, 'Completed')
-    redis_handler.set(`Llamafy-completed`, EXAMPLE_JSON)
+    await redis_handler.set(`Llamafy-${job?.id}`, 'Completed')
+    await redis_handler.set(`Llamafy-${job?.id}-completed`, EXAMPLE_JSON)
   } catch (error) {
     console.log('Error while processing requests', error?.message)
   }
