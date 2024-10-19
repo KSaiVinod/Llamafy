@@ -51,23 +51,23 @@ const sleep = ms => {
 
 async function processRequest(job) {
   try {
-    redis_handler.set(`Llamafy-${job?.id}`, 'Started')
+    redis_handler.set(`Llamafy-status`, 'Started')
 
     sleep(100)
 
-    redis_handler.set(`Llamafy-${job?.id}`, 'Stage 1')
+    redis_handler.set(`Llamafy-status`, 'Stage 1')
 
     sleep(100)
 
-    redis_handler.set(`Llamafy-${job?.id}`, 'Stage 2')
+    redis_handler.set(`Llamafy-status`, 'Stage 2')
 
     sleep(100)
 
-    redis_handler.set(`Llamafy-${job?.id}`, 'Completed')
+    redis_handler.set(`Llamafy-status`, 'Completed')
     redis_handler.set(`Llamafy-completed`, EXAMPLE_JSON)
     sleep(100)
 
-    redis_handler.deletekey(`Llamafy-${job?.id}`)
+    redis_handler.deletekey(`Llamafy-status`)
   } catch (error) {
     console.log('Error while processing requests', error?.message)
   }
