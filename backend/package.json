@@ -1,25 +1,32 @@
 {
-  "name": "llamafy-backend",
-  "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/KSaiVinod/Llamafy.git"
-  },
-  "author": "Sai Vinod",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/KSaiVinod/Llamafy/issues"
-  },
-  "homepage": "https://github.com/KSaiVinod/Llamafy#readme",
-  "description": "",
-  "dependencies": {
-    "axios": "^1.7.7",
-    "cheerio": "^1.0.0",
-    "express": "^4.21.1",
-    "nodemon": "^3.1.7"
-  }
+    "name": "llamafy-backend",
+    "version": "1.0.0",
+    "main": "src/index.js",
+    "scripts": {
+        "dev": "nodemon src/index.js",
+        "start": "node src/index.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+ssh://git@github.com/KSaiVinod/Llamafy.git"
+    },
+    "author": "Sai Vinod",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/KSaiVinod/Llamafy/issues"
+    },
+    "homepage": "https://github.com/KSaiVinod/Llamafy#readme",
+    "description": "",
+    "dependencies": {
+        "axios": "^1.7.7",
+        "cheerio": "^1.0.0",
+        "compression": "^1.7.4",
+        "cookie-parser": "^1.4.7",
+        "cors": "^2.8.5",
+        "express": "^4.21.1",
+        "express-winston": "^4.2.0",
+        "helmet": "^8.0.0",
+        "nodemon": "^3.1.7",
+        "winston": "^3.15.0"
+    }
 }
