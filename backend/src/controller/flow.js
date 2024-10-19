@@ -89,7 +89,7 @@ class FlowController {
     try {
       const output = await redis_handler.get(`Llamafy-${id}-completed`)
 
-      return output
+      return JSON.parse(output)
     } catch (error) {
       logger.error(error)
     }

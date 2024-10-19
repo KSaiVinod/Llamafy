@@ -57,7 +57,7 @@ router.get('/flow/status', async (req, res) => {
     const { job_id } = req.query
     const status = await flow.getStatus(job_id)
 
-    if (status && status !== 'completed') {
+    if (!status || (status && status !== 'completed')) {
       res.status(200).send({
         result: {
           done: false,
