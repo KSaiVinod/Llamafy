@@ -530,7 +530,6 @@ const schema = {
 };
 
 const getGoogleFormJson = async (url) => {
-    logger.info('skdjhfjksdhfjksdhfjks');
     const response = await axios.get(url);
     const html = response.data;
     const $ = cheerio.load(html);
@@ -662,5 +661,18 @@ const validateFlowJson = (flowJson) => {
 
 module.exports = {
     getGoogleFormJson,
-    validateFlowJson
+    validateFlowJson,
+    textHeadingSchema,
+    textSubheadingSchema,
+    textBodySchema,
+    textCaptionSchema,
+    richTextSchema,
+    textInputSchema,
+    textAreaSchema,
+    checkboxGroupSchema,
+    radioButtonsGroupSchema,
+    dropdownSchema,
+    datePickerSchema,
+    imageSchema,
+    footerSchema
 };
