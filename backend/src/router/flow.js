@@ -50,4 +50,33 @@ router.get('/flow/preview', async (req, res) => {
   }
 })
 
+router.get('/flow/status', async (req, res) => {
+  const flow = new FlowController()
+
+  try {
+    const status = await flow.getStatus()
+
+    if (status !== 'completed') {
+      res.status(200).send({
+        result: {
+          done: false,
+          content: {}
+        },
+        status: 'ok'
+      })
+    } else {
+      const result = await flow.getGeneratedJSON()
+      res.status(200).send({
+        result: {
+          done: true,
+          content: result
+        },
+        status: 'ok'
+      })
+    }
+  } catch (error) {
+    console.log('Error While fetching status')
+  }
+})
+
 module.exports = router

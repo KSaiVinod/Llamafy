@@ -3,6 +3,7 @@ const FormData = require('form-data')
 const logger = require('../handlers/winston_handler')
 const Queue = require('../helpers/queues_helper')
 const { default: axios } = require('axios')
+const redis_handler = require('../helpers/redis_handler')
 
 class FlowController {
   async processRequest(data) {
@@ -71,6 +72,26 @@ class FlowController {
         })
     } catch (error) {
       logger.error(error, flow_id)
+    }
+  }
+
+  async getStatus() {
+    try {
+      const status = redis_handler.getKeys(`Llamafy-status`)
+
+      return status
+    } catch (error) {
+      logger.error(error)
+    }
+  }
+
+  async getGeneratedJSON() {
+    try {
+      const output = redis_handler.getKeys(`Llamafy-completed`)
+
+      return output
+    } catch (error) {
+      logger.error(error)
     }
   }
 }
