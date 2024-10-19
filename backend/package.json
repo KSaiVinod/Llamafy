@@ -3,8 +3,8 @@
     "version": "1.0.0",
     "main": "src/index.js",
     "scripts": {
-        "dev": "nodemon src/index.js",
-        "start": "node src/index.js"
+        "dev": "env-cmd -f .env nodemon src/index.js",
+        "start": "env-cmd -f .env node src/index.js"
     },
     "repository": {
         "type": "git",

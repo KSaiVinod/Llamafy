@@ -19,7 +19,7 @@ module.exports = function (options) {
     function unset() {}
 
     function levelCheck(level) {
-        const level_score = levels[process.env.LOG_LEVEL.toLowerCase()];
+        const level_score = levels[process.env.LOG_LEVEL?.toLowerCase()];
 
         if (level <= level_score) {
             return true;

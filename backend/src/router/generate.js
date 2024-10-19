@@ -8,7 +8,9 @@ router.post("/generate", async (req, res) => {
     const generate = new GenerateController();
 
     try {
-        const request_id = generate.processRequest(req.body);
+        const request_id = await generate.processRequest(req.body);
+
+        console.log(">>>>>>>>>>>>>>>2", request_id);
 
         res.status(200).send({
             request_id,
@@ -19,3 +21,5 @@ router.post("/generate", async (req, res) => {
         res.status(400).send({ _error: error.message });
     }
 });
+
+module.exports = router;

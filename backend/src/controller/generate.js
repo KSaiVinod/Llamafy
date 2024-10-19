@@ -4,9 +4,12 @@ const Queue = require("../helpers/queues_helper");
 class GenerateController {
     async processRequest(data) {
         try {
-            const queueName = "GENERATEQ";
+            const queueName = process.env.GENERATEQ_NAME;
 
-            Queue.addToQueue(queueName, data, { delay: 0, priority: undefined })
+            return await Queue.addToQueue(queueName, data, {
+                delay: 0,
+                priority: undefined
+            })
                 .then(function (resp) {
                     logger.info(
                         `Added in queue ${queueName} with id ${resp?.id}`
@@ -14,9 +17,11 @@ class GenerateController {
 
                     return resp?.id;
                 })
-                .catch(logger.error(e, data));
+                .catch(function (e) {
+                    logger.error(e, data);
+                });
         } catch (error) {
-            logger.error(e, data);
+            logger.error(error, data);
         }
     }
 }

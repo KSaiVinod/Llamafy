@@ -1,6 +1,6 @@
 const { Queue } = require("bullmq");
 const logger = require("./logger_helper")("BULL");
-const { connection } = require("./bull_connection_string");
+const { connection } = require("./bull_conn");
 
 const fn = require("./bull_functions");
 
