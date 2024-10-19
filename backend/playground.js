@@ -271,7 +271,6 @@
 
 const Ajv = require('ajv');
 const ajv = new Ajv({ allErrors: true });
-
 // Add custom formats for base64 and date
 ajv.addFormat('base64', {
     type: 'string',
@@ -288,6 +287,427 @@ ajv.addFormat('date', {
         return /^\d{4}-\d{2}-\d{2}$/.test(dateString);
     }
 });
+
+const textHeadingSchema = {
+    type: 'object',
+    properties: {
+        type: {
+            type: 'string',
+            const: 'TextHeading'
+        },
+        text: {
+            type: 'string',
+            maxLength: 80,
+            minLength: 1
+        }
+    },
+    required: ['type', 'text']
+};
+
+const textSubheadingSchema = {
+    type: 'object',
+    properties: {
+        type: {
+            type: 'string',
+            const: 'TextSubheading'
+        },
+        text: {
+            type: 'string',
+            maxLength: 80,
+            minLength: 1
+        }
+    },
+    required: ['type', 'text']
+};
+
+const textBodySchema = {
+    type: 'object',
+    properties: {
+        type: {
+            type: 'string',
+            const: 'TextBody'
+        },
+        text: {
+            type: 'string',
+            maxLength: 4096,
+            minLength: 1
+        },
+        'font-weight': {
+            type: 'string',
+            enum: ['bold', 'italic', 'bold_italic', 'normal']
+        },
+        strikethrough: {
+            type: 'boolean'
+        },
+        markdown: {
+            type: 'boolean',
+            default: false
+        }
+    },
+    required: ['type', 'text']
+};
+
+const textCaptionSchema = {
+    type: 'object',
+    properties: {
+        type: {
+            type: 'string',
+            const: 'TextCaption'
+        },
+        text: {
+            type: 'string',
+            maxLength: 409,
+            minLength: 1
+        },
+        'font-weight': {
+            type: 'string',
+            enum: ['bold', 'italic', 'bold_italic', 'normal']
+        },
+        strikethrough: {
+            type: 'boolean'
+        },
+        markdown: {
+            type: 'boolean',
+            default: false
+        },
+        visible: {
+            type: 'boolean',
+            default: true
+        }
+    },
+    required: ['type', 'text']
+};
+
+const richTextSchema = {
+    type: 'object',
+    additionalProperties: false,
+
+    properties: {
+        type: { type: 'string', const: 'RichText' },
+        name: {
+            type: 'string'
+        },
+        text: {
+            oneOf: [
+                { type: 'string', minLength: 1 },
+                {
+                    type: 'array',
+                    items: { type: 'string' },
+                    minItems: 1
+                }
+            ]
+        },
+        visible: { type: 'boolean', default: true }
+    },
+    required: ['type', 'text', 'name']
+};
+
+const textInputSchema = {
+    type: 'object',
+    properties: {
+        type: {
+            type: 'string',
+            const: 'TextInput'
+        },
+        label: {
+            type: 'string',
+            maxLength: 20,
+            minLength: 1
+        },
+        name: {
+            type: 'string'
+        },
+        'input-type': {
+            type: 'string',
+            enum: ['text', 'number', 'email', 'password', 'passcode', 'phone']
+        },
+        required: { type: 'boolean' },
+        'helper-text': {
+            type: 'string',
+            maxLength: 80
+        },
+        'min-chars': {
+            type: 'integer',
+            minimum: 1
+        },
+        'max-chars': {
+            type: 'integer',
+            maximum: 80,
+            default: 80
+        },
+        visible: {
+            type: 'boolean',
+            default: true
+        }
+    },
+    required: ['type', 'label', 'name']
+};
+
+const textAreaSchema = {
+    type: 'object',
+    properties: {
+        type: {
+            type: 'string',
+            const: 'TextArea'
+        },
+        label: {
+            type: 'string',
+            maxLength: 20,
+            minLength: 1
+        },
+        name: {
+            type: 'string'
+        },
+        required: { type: 'boolean' },
+        'helper-text': {
+            type: 'string',
+            maxLength: 80
+        },
+        'max-length': {
+            type: 'integer',
+            default: 600
+        },
+        visible: {
+            type: 'boolean',
+            default: true
+        }
+    },
+    required: ['type', 'label', 'name']
+};
+
+const checkboxGroupSchema = {
+    type: 'object',
+    properties: {
+        type: {
+            type: 'string',
+            const: 'CheckboxGroup'
+        },
+        label: {
+            type: 'string',
+            maxLength: 30,
+            minLength: 1
+        },
+        name: {
+            type: 'string'
+        },
+        'data-source': {
+            type: 'array',
+            minItems: 1,
+            maxItems: 20,
+            items: {
+                type: 'object',
+                properties: {
+                    id: {
+                        type: 'string'
+                    },
+                    title: {
+                        type: 'string',
+                        maxLength: 30
+                    }
+                }
+            }
+        },
+        'min-selected-items': {
+            type: 'integer'
+        },
+        'max-selected-items': {
+            type: 'integer'
+        },
+        required: { type: 'boolean' },
+        enabled: { type: 'boolean' },
+        visible: {
+            type: 'boolean',
+            default: true
+        }
+    },
+    required: ['type', 'label', 'data-source', 'name']
+};
+
+const radioButtonsGroupSchema = {
+    type: 'object',
+    properties: {
+        type: {
+            type: 'string',
+            const: 'RadioButtonsGroup'
+        },
+        name: {
+            type: 'string'
+        },
+        label: {
+            type: 'string',
+            maxLength: 30,
+            minLength: 1
+        },
+        'data-source': {
+            type: 'array',
+            minItems: 1,
+            maxItems: 20,
+            items: {
+                type: 'object',
+                properties: {
+                    id: {
+                        type: 'string'
+                    },
+                    title: {
+                        type: 'string',
+                        maxLength: 30
+                    }
+                }
+            }
+        },
+        required: { type: 'boolean' },
+        enabled: { type: 'boolean' },
+        visible: {
+            type: 'boolean',
+            default: true
+        }
+    },
+    required: ['type', 'label', 'data-source', 'name']
+};
+
+const dropdownSchema = {
+    type: 'object',
+    properties: {
+        type: {
+            type: 'string',
+            const: 'Dropdown'
+        },
+        name: {
+            type: 'string'
+        },
+        label: {
+            type: 'string',
+            maxLength: 20,
+            minLength: 1
+        },
+        'data-source': {
+            type: 'array',
+            minItems: 1,
+            maxItems: 200,
+            items: {
+                type: 'object',
+                properties: {
+                    id: {
+                        type: 'string'
+                    },
+                    title: {
+                        type: 'string',
+                        maxLength: 30
+                    }
+                }
+            }
+        },
+        required: { type: 'boolean' },
+        enabled: { type: 'boolean' },
+        visible: {
+            type: 'boolean',
+            default: true
+        }
+    },
+    required: ['type', 'label', 'name', 'data-source']
+};
+
+const datePickerSchema = {
+    type: 'object',
+    properties: {
+        type: {
+            type: 'string',
+            const: 'DatePicker'
+        },
+        label: {
+            type: 'string',
+            maxLength: 40,
+            minLength: 1
+        },
+        name: {
+            type: 'string'
+        },
+        'min-date': {
+            type: 'string',
+            format: 'date'
+        },
+        'max-date': {
+            type: 'string',
+            format: 'date'
+        },
+        'unavailable-dates': {
+            type: 'array',
+            items: {
+                type: 'string',
+                format: 'date'
+            }
+        },
+        required: { type: 'boolean' },
+        visible: {
+            type: 'boolean',
+            default: true
+        }
+    },
+    required: ['type', 'label', 'name']
+};
+
+const imageSchema = {
+    type: 'object',
+    properties: {
+        type: {
+            type: 'string',
+            const: 'Image'
+        },
+        name: {
+            type: 'string'
+        },
+        src: {
+            type: 'string',
+            format: 'base64'
+        },
+        width: {
+            type: 'integer',
+            maximum: 2000
+        },
+        height: {
+            type: 'integer',
+            maximum: 2000
+        },
+        'scale-type': {
+            type: 'string',
+            enum: ['cover', 'contain'],
+            default: 'contain'
+        },
+        'aspect-ratio': {
+            type: 'number',
+            default: 1
+        },
+        'alt-text': {
+            type: 'string',
+            maxLength: 100
+        }
+    },
+    required: ['type', 'src', 'alt-text', 'name']
+};
+
+const footerSchema = {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+        type: { type: 'string', const: 'Footer' },
+        label: { type: 'string', minLength: 1, maxLength: 35 },
+        'left-caption': { type: 'string', maxLength: 15 },
+        'right-caption': { type: 'string', maxLength: 15 },
+        'center-caption': { type: 'string', maxLength: 15 },
+        enabled: { type: 'boolean' },
+        'on-click-action': {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+                name: { type: 'string' },
+                next: { type: 'object' },
+                payload: { type: 'object' }
+            },
+            required: ['name']
+        }
+    },
+    required: ['type', 'label', 'on-click-action']
+};
 
 // Define the complete schema for the flow JSON
 const schema = {
@@ -330,455 +750,23 @@ const schema = {
                                 type: 'array',
                                 items: {
                                     oneOf: [
+                                        { $ref: '#/definitions/textHeading' },
                                         {
-                                            type: 'object',
-                                            properties: {
-                                                type: {
-                                                    type: 'string',
-                                                    const: 'TextHeading'
-                                                },
-                                                text: {
-                                                    type: 'string',
-                                                    maxLength: 80,
-                                                    minLength: 1
-                                                }
-                                            },
-                                            required: ['type', 'text']
+                                            $ref: '#/definitions/textSubheading'
                                         },
+                                        { $ref: '#/definitions/textBody' },
+                                        { $ref: '#/definitions/textCaption' },
+                                        { $ref: '#/definitions/richText' },
+                                        { $ref: '#/definitions/textInput' },
+                                        { $ref: '#/definitions/textArea' },
+                                        { $ref: '#/definitions/checkboxGroup' },
                                         {
-                                            type: 'object',
-                                            properties: {
-                                                type: {
-                                                    type: 'string',
-                                                    const: 'TextSubheading'
-                                                },
-                                                text: {
-                                                    type: 'string',
-                                                    maxLength: 80,
-                                                    minLength: 1
-                                                }
-                                            },
-                                            required: ['type', 'text']
+                                            $ref: '#/definitions/radioButtonsGroup'
                                         },
-                                        {
-                                            type: 'object',
-                                            properties: {
-                                                type: {
-                                                    type: 'string',
-                                                    const: 'TextCaption'
-                                                },
-                                                text: {
-                                                    type: 'string',
-                                                    maxLength: 409,
-                                                    minLength: 1
-                                                },
-                                                'font-weight': {
-                                                    type: 'string',
-                                                    enum: [
-                                                        'bold',
-                                                        'italic',
-                                                        'bold_italic',
-                                                        'normal'
-                                                    ]
-                                                },
-                                                strikethrough: {
-                                                    type: 'boolean'
-                                                },
-                                                markdown: {
-                                                    type: 'boolean',
-                                                    default: false
-                                                },
-                                                visible: {
-                                                    type: 'boolean',
-                                                    default: true
-                                                }
-                                            },
-                                            required: ['type', 'text']
-                                        },
-                                        {
-                                            type: 'object',
-                                            properties: {
-                                                type: {
-                                                    type: 'string',
-                                                    const: 'TextBody'
-                                                },
-                                                text: {
-                                                    type: 'string',
-                                                    maxLength: 4096,
-                                                    minLength: 1
-                                                },
-                                                'font-weight': {
-                                                    type: 'string',
-                                                    enum: [
-                                                        'bold',
-                                                        'italic',
-                                                        'bold_italic',
-                                                        'normal'
-                                                    ]
-                                                },
-                                                strikethrough: {
-                                                    type: 'boolean'
-                                                },
-                                                markdown: {
-                                                    type: 'boolean',
-                                                    default: false
-                                                }
-                                            },
-                                            required: ['type', 'text']
-                                        },
-                                        {
-                                            type: 'object',
-                                            properties: {
-                                                type: {
-                                                    type: 'string',
-                                                    const: 'RichText'
-                                                },
-                                                text: {
-                                                    type: 'string'
-                                                }
-                                            },
-                                            required: ['type', 'text']
-                                        },
-                                        {
-                                            type: 'object',
-                                            properties: {
-                                                type: {
-                                                    type: 'string',
-                                                    const: 'TextInput'
-                                                },
-                                                label: {
-                                                    type: 'string',
-                                                    maxLength: 20,
-                                                    minLength: 1
-                                                },
-                                                'input-type': {
-                                                    type: 'string',
-                                                    enum: [
-                                                        'text',
-                                                        'number',
-                                                        'email',
-                                                        'password',
-                                                        'passcode',
-                                                        'phone'
-                                                    ]
-                                                },
-                                                required: { type: 'boolean' },
-                                                'helper-text': {
-                                                    type: 'string',
-                                                    maxLength: 80
-                                                },
-                                                'min-chars': {
-                                                    type: 'integer',
-                                                    minimum: 1
-                                                },
-                                                'max-chars': {
-                                                    type: 'integer',
-                                                    maximum: 80,
-                                                    default: 80
-                                                },
-                                                visible: {
-                                                    type: 'boolean',
-                                                    default: true
-                                                }
-                                            },
-                                            required: ['type', 'label']
-                                        },
-                                        {
-                                            type: 'object',
-                                            properties: {
-                                                type: {
-                                                    type: 'string',
-                                                    const: 'TextArea'
-                                                },
-                                                label: {
-                                                    type: 'string',
-                                                    maxLength: 20,
-                                                    minLength: 1
-                                                },
-                                                required: { type: 'boolean' },
-                                                'helper-text': {
-                                                    type: 'string',
-                                                    maxLength: 80
-                                                },
-                                                'max-length': {
-                                                    type: 'integer',
-                                                    default: 600
-                                                },
-                                                visible: {
-                                                    type: 'boolean',
-                                                    default: true
-                                                }
-                                            },
-                                            required: ['type', 'label']
-                                        },
-                                        {
-                                            type: 'object',
-                                            properties: {
-                                                type: {
-                                                    type: 'string',
-                                                    const: 'CheckboxGroup'
-                                                },
-                                                label: {
-                                                    type: 'string',
-                                                    maxLength: 30,
-                                                    minLength: 1
-                                                },
-                                                'data-source': {
-                                                    type: 'array',
-                                                    minItems: 1,
-                                                    maxItems: 20,
-                                                    items: {
-                                                        type: 'object',
-                                                        properties: {
-                                                            id: {
-                                                                type: 'string'
-                                                            },
-                                                            title: {
-                                                                type: 'string',
-                                                                maxLength: 30
-                                                            }
-                                                        }
-                                                    }
-                                                },
-                                                'min-selected-items': {
-                                                    type: 'integer'
-                                                },
-                                                'max-selected-items': {
-                                                    type: 'integer'
-                                                },
-                                                required: { type: 'boolean' },
-                                                enabled: { type: 'boolean' },
-                                                visible: {
-                                                    type: 'boolean',
-                                                    default: true
-                                                }
-                                            },
-                                            required: [
-                                                'type',
-                                                'label',
-                                                'data-source'
-                                            ]
-                                        },
-                                        {
-                                            type: 'object',
-                                            properties: {
-                                                type: {
-                                                    type: 'string',
-                                                    const: 'RadioButtonsGroup'
-                                                },
-                                                label: {
-                                                    type: 'string',
-                                                    maxLength: 30,
-                                                    minLength: 1
-                                                },
-                                                'data-source': {
-                                                    type: 'array',
-                                                    minItems: 1,
-                                                    maxItems: 20,
-                                                    items: {
-                                                        type: 'object',
-                                                        properties: {
-                                                            id: {
-                                                                type: 'string'
-                                                            },
-                                                            title: {
-                                                                type: 'string',
-                                                                maxLength: 30
-                                                            }
-                                                        }
-                                                    }
-                                                },
-                                                required: { type: 'boolean' },
-                                                enabled: { type: 'boolean' },
-                                                visible: {
-                                                    type: 'boolean',
-                                                    default: true
-                                                }
-                                            },
-                                            required: [
-                                                'type',
-                                                'label',
-                                                'data-source'
-                                            ]
-                                        },
-                                        {
-                                            type: 'object',
-                                            properties: {
-                                                type: {
-                                                    type: 'string',
-                                                    const: 'Dropdown'
-                                                },
-                                                label: {
-                                                    type: 'string',
-                                                    maxLength: 20,
-                                                    minLength: 1
-                                                },
-                                                'data-source': {
-                                                    type: 'array',
-                                                    minItems: 1,
-                                                    maxItems: 200,
-                                                    items: {
-                                                        type: 'object',
-                                                        properties: {
-                                                            id: {
-                                                                type: 'string'
-                                                            },
-                                                            title: {
-                                                                type: 'string',
-                                                                maxLength: 30
-                                                            }
-                                                        }
-                                                    }
-                                                },
-                                                required: { type: 'boolean' },
-                                                enabled: { type: 'boolean' },
-                                                visible: {
-                                                    type: 'boolean',
-                                                    default: true
-                                                }
-                                            },
-                                            required: [
-                                                'type',
-                                                'label',
-                                                'name',
-                                                'data-source'
-                                            ]
-                                        },
-                                        {
-                                            type: 'object',
-                                            properties: {
-                                                type: {
-                                                    type: 'string',
-                                                    const: 'DatePicker'
-                                                },
-                                                label: {
-                                                    type: 'string',
-                                                    maxLength: 40,
-                                                    minLength: 1
-                                                },
-                                                'min-date': {
-                                                    type: 'string',
-                                                    format: 'date'
-                                                },
-                                                'max-date': {
-                                                    type: 'string',
-                                                    format: 'date'
-                                                },
-                                                'unavailable-dates': {
-                                                    type: 'array',
-                                                    items: {
-                                                        type: 'string',
-                                                        format: 'date'
-                                                    }
-                                                },
-                                                required: { type: 'boolean' },
-                                                visible: {
-                                                    type: 'boolean',
-                                                    default: true
-                                                }
-                                            },
-                                            required: ['type', 'label']
-                                        },
-                                        {
-                                            type: 'object',
-                                            properties: {
-                                                type: {
-                                                    type: 'string',
-                                                    const: 'Image'
-                                                },
-                                                src: {
-                                                    type: 'string',
-                                                    format: 'base64'
-                                                },
-                                                width: {
-                                                    type: 'integer',
-                                                    maximum: 2000
-                                                },
-                                                height: {
-                                                    type: 'integer',
-                                                    maximum: 2000
-                                                },
-                                                'scale-type': {
-                                                    type: 'string',
-                                                    enum: ['cover', 'contain'],
-                                                    default: 'contain'
-                                                },
-                                                'aspect-ratio': {
-                                                    type: 'number',
-                                                    default: 1
-                                                },
-                                                'alt-text': {
-                                                    type: 'string',
-                                                    maxLength: 100
-                                                }
-                                            },
-                                            required: [
-                                                'type',
-                                                'src',
-                                                'alt-text'
-                                            ]
-                                        },
-                                        {
-                                            type: 'object',
-                                            properties: {
-                                                type: {
-                                                    type: 'string',
-                                                    const: 'TextArea'
-                                                },
-                                                label: {
-                                                    type: 'string',
-                                                    minLength: 1,
-                                                    maxLength: 100
-                                                },
-                                                required: {
-                                                    type: 'boolean'
-                                                },
-                                                name: {
-                                                    type: 'string'
-                                                }
-                                            },
-                                            required: ['type', 'label', 'name']
-                                        },
-                                        {
-                                            type: 'object',
-                                            properties: {
-                                                type: {
-                                                    type: 'string',
-                                                    const: 'Footer'
-                                                },
-                                                label: {
-                                                    type: 'string',
-                                                    maxLength: 35,
-                                                    minLength: 1
-                                                },
-                                                'left-caption': {
-                                                    type: 'string',
-                                                    maxLength: 15
-                                                },
-                                                'right-caption': {
-                                                    type: 'string',
-                                                    maxLength: 15
-                                                },
-                                                enabled: { type: 'boolean' },
-                                                'on-click-action': {
-                                                    type: 'object',
-                                                    properties: {
-                                                        name: {
-                                                            type: 'string'
-                                                        },
-                                                        payload: {
-                                                            type: 'object'
-                                                        }
-                                                    },
-                                                    required: ['name']
-                                                }
-                                            },
-                                            required: [
-                                                'type',
-                                                'label',
-                                                'on-click-action'
-                                            ]
-                                        }
+                                        { $ref: '#/definitions/dropdown' },
+                                        { $ref: '#/definitions/datePicker' },
+                                        { $ref: '#/definitions/image' },
+                                        { $ref: '#/definitions/footer' }
                                     ]
                                 }
                             }
@@ -791,469 +779,23 @@ const schema = {
         }
     },
     required: ['version', 'screens'],
-    additionalProperties: false
+    additionalProperties: false,
+    definitions: {
+        textHeading: textHeadingSchema,
+        textSubheading: textSubheadingSchema,
+        textBody: textBodySchema,
+        textCaption: textCaptionSchema,
+        richText: richTextSchema,
+        textInput: textInputSchema,
+        textArea: textAreaSchema,
+        checkboxGroup: checkboxGroupSchema,
+        radioButtonsGroup: radioButtonsGroupSchema,
+        dropdown: dropdownSchema,
+        datePicker: datePickerSchema,
+        image: imageSchema,
+        footer: footerSchema
+    }
 };
-// const schema = {
-//     $schema: 'http://json-schema.org/draft-07/schema#',
-//     title: 'WhatsApp Flow Schema',
-//     type: 'object',
-//     properties: {
-//         version: {
-//             type: 'string',
-//             description: 'Version of the flow',
-//             enum: ['1.0', '2.0', '3.0', '3.1', '4.0', '5.0', '5.1']
-//         },
-//         screens: {
-//             type: 'array',
-//             description: 'List of screens in the flow',
-//             items: {
-//                 type: 'object',
-//                 properties: {
-//                     id: { type: 'string' },
-//                     title: { type: 'string' },
-//                     data: { type: 'object' },
-//                     terminal: { type: 'boolean', default: false },
-//                     layout: {
-//                         type: 'object',
-//                         properties: {
-//                             type: {
-//                                 type: 'string',
-//                                 const: 'SingleColumnLayout'
-//                             },
-//                             children: {
-//                                 type: 'array',
-//                                 items: {
-//                                     oneOf: [
-//                                         {
-//                                             type: 'object',
-//                                             properties: {
-//                                                 type: {
-//                                                     type: 'string',
-//                                                     const: 'TextHeading'
-//                                                 },
-//                                                 text: {
-//                                                     type: 'string',
-//                                                     maxLength: 80,
-//                                                     minLength: 1
-//                                                 },
-//                                                 visible: {
-//                                                     type: 'boolean',
-//                                                     default: true
-//                                                 }
-//                                             },
-//                                             required: ['type', 'text']
-//                                         },
-//                                         {
-//                                             type: 'object',
-//                                             properties: {
-//                                                 type: {
-//                                                     type: 'string',
-//                                                     const: 'TextSubheading'
-//                                                 },
-//                                                 text: {
-//                                                     type: 'string',
-//                                                     maxLength: 80,
-//                                                     minLength: 1
-//                                                 },
-//                                                 visible: {
-//                                                     type: 'boolean',
-//                                                     default: true
-//                                                 }
-//                                             },
-//                                             required: ['type', 'text']
-//                                         },
-//                                         {
-//                                             type: 'object',
-//                                             properties: {
-//                                                 type: {
-//                                                     type: 'string',
-//                                                     const: 'TextBody'
-//                                                 },
-//                                                 text: {
-//                                                     type: 'string',
-//                                                     maxLength: 4096,
-//                                                     minLength: 1
-//                                                 },
-//                                                 'font-weight': {
-//                                                     type: 'string',
-//                                                     enum: [
-//                                                         'bold',
-//                                                         'italic',
-//                                                         'bold_italic',
-//                                                         'normal'
-//                                                     ]
-//                                                 },
-//                                                 strikethrough: {
-//                                                     type: 'boolean'
-//                                                 },
-//                                                 markdown: {
-//                                                     type: 'boolean',
-//                                                     default: false
-//                                                 },
-//                                                 visible: {
-//                                                     type: 'boolean',
-//                                                     default: true
-//                                                 }
-//                                             },
-//                                             required: ['type', 'text']
-//                                         },
-//                                         {
-//                                             type: 'object',
-//                                             properties: {
-//                                                 type: {
-//                                                     type: 'string',
-//                                                     const: 'TextCaption'
-//                                                 },
-//                                                 text: {
-//                                                     type: 'string',
-//                                                     maxLength: 409,
-//                                                     minLength: 1
-//                                                 },
-//                                                 'font-weight': {
-//                                                     type: 'string',
-//                                                     enum: [
-//                                                         'bold',
-//                                                         'italic',
-//                                                         'bold_italic',
-//                                                         'normal'
-//                                                     ]
-//                                                 },
-//                                                 strikethrough: {
-//                                                     type: 'boolean'
-//                                                 },
-//                                                 markdown: {
-//                                                     type: 'boolean',
-//                                                     default: false
-//                                                 },
-//                                                 visible: {
-//                                                     type: 'boolean',
-//                                                     default: true
-//                                                 }
-//                                             },
-//                                             required: ['type', 'text']
-//                                         },
-//                                         {
-//                                             type: 'object',
-//                                             properties: {
-//                                                 type: {
-//                                                     type: 'string',
-//                                                     const: 'RichText'
-//                                                 },
-//                                                 text: {
-//                                                     type: 'array',
-//                                                     items: { type: 'string' }
-//                                                 },
-//                                                 visible: {
-//                                                     type: 'boolean',
-//                                                     default: true
-//                                                 }
-//                                             },
-//                                             required: ['type', 'text']
-//                                         },
-//                                         {
-//                                             type: 'object',
-//                                             properties: {
-//                                                 type: {
-//                                                     type: 'string',
-//                                                     const: 'TextEntry'
-//                                                 },
-//                                                 label: {
-//                                                     type: 'string',
-//                                                     maxLength: 20,
-//                                                     minLength: 1
-//                                                 },
-//                                                 'input-type': {
-//                                                     type: 'string',
-//                                                     enum: [
-//                                                         'text',
-//                                                         'number',
-//                                                         'email',
-//                                                         'password',
-//                                                         'passcode',
-//                                                         'phone'
-//                                                     ]
-//                                                 },
-//                                                 required: { type: 'boolean' },
-//                                                 'helper-text': {
-//                                                     type: 'string',
-//                                                     maxLength: 80
-//                                                 },
-//                                                 'min-chars': {
-//                                                     type: 'integer',
-//                                                     minimum: 1
-//                                                 },
-//                                                 'max-chars': {
-//                                                     type: 'integer',
-//                                                     maximum: 80,
-//                                                     default: 80
-//                                                 },
-//                                                 visible: {
-//                                                     type: 'boolean',
-//                                                     default: true
-//                                                 }
-//                                             },
-//                                             required: ['type', 'label']
-//                                         },
-//                                         {
-//                                             type: 'object',
-//                                             properties: {
-//                                                 type: {
-//                                                     type: 'string',
-//                                                     const: 'CheckboxGroup'
-//                                                 },
-//                                                 label: {
-//                                                     type: 'string',
-//                                                     maxLength: 30,
-//                                                     minLength: 1
-//                                                 },
-//                                                 'data-source': {
-//                                                     type: 'array',
-//                                                     minItems: 1,
-//                                                     maxItems: 20,
-//                                                     items: {
-//                                                         type: 'object',
-//                                                         properties: {
-//                                                             id: {
-//                                                                 type: 'string'
-//                                                             },
-//                                                             title: {
-//                                                                 type: 'string',
-//                                                                 maxLength: 30
-//                                                             }
-//                                                         }
-//                                                     }
-//                                                 },
-//                                                 'min-selected-items': {
-//                                                     type: 'integer'
-//                                                 },
-//                                                 'max-selected-items': {
-//                                                     type: 'integer'
-//                                                 },
-//                                                 required: { type: 'boolean' },
-//                                                 enabled: { type: 'boolean' },
-//                                                 visible: {
-//                                                     type: 'boolean',
-//                                                     default: true
-//                                                 }
-//                                             },
-//                                             required: [
-//                                                 'type',
-//                                                 'label',
-//                                                 'data-source'
-//                                             ]
-//                                         },
-//                                         {
-//                                             type: 'object',
-//                                             properties: {
-//                                                 type: {
-//                                                     type: 'string',
-//                                                     const: 'RadioButtonsGroup'
-//                                                 },
-//                                                 label: {
-//                                                     type: 'string',
-//                                                     maxLength: 30,
-//                                                     minLength: 1
-//                                                 },
-//                                                 'data-source': {
-//                                                     type: 'array',
-//                                                     minItems: 1,
-//                                                     maxItems: 20,
-//                                                     items: {
-//                                                         type: 'object',
-//                                                         properties: {
-//                                                             id: {
-//                                                                 type: 'string'
-//                                                             },
-//                                                             title: {
-//                                                                 type: 'string',
-//                                                                 maxLength: 30
-//                                                             }
-//                                                         }
-//                                                     }
-//                                                 },
-//                                                 required: { type: 'boolean' },
-//                                                 enabled: { type: 'boolean' },
-//                                                 visible: {
-//                                                     type: 'boolean',
-//                                                     default: true
-//                                                 }
-//                                             },
-//                                             required: [
-//                                                 'type',
-//                                                 'label',
-//                                                 'data-source'
-//                                             ]
-//                                         },
-//                                         {
-//                                             type: 'object',
-//                                             properties: {
-//                                                 type: {
-//                                                     type: 'string',
-//                                                     const: 'Footer'
-//                                                 },
-//                                                 label: {
-//                                                     type: 'string',
-//                                                     maxLength: 35,
-//                                                     minLength: 1
-//                                                 },
-//                                                 'left-caption': {
-//                                                     type: 'string',
-//                                                     maxLength: 15
-//                                                 },
-//                                                 'right-caption': {
-//                                                     type: 'string',
-//                                                     maxLength: 15
-//                                                 },
-//                                                 enabled: { type: 'boolean' },
-//                                                 'on-click-action': {
-//                                                     type: 'object',
-//                                                     properties: {
-//                                                         name: {
-//                                                             type: 'string'
-//                                                         },
-//                                                         payload: {
-//                                                             type: 'object'
-//                                                         }
-//                                                     },
-//                                                     required: ['name']
-//                                                 }
-//                                             },
-//                                             required: [
-//                                                 'type',
-//                                                 'label',
-//                                                 'on-click-action'
-//                                             ]
-//                                         },
-//                                         {
-//                                             type: 'object',
-//                                             properties: {
-//                                                 type: {
-//                                                     type: 'string',
-//                                                     const: 'Dropdown'
-//                                                 },
-//                                                 label: {
-//                                                     type: 'string',
-//                                                     maxLength: 20,
-//                                                     minLength: 1
-//                                                 },
-//                                                 'data-source': {
-//                                                     type: 'array',
-//                                                     minItems: 1,
-//                                                     maxItems: 200,
-//                                                     items: {
-//                                                         type: 'object',
-//                                                         properties: {
-//                                                             id: {
-//                                                                 type: 'string'
-//                                                             },
-//                                                             title: {
-//                                                                 type: 'string',
-//                                                                 maxLength: 30
-//                                                             }
-//                                                         }
-//                                                     }
-//                                                 },
-//                                                 required: { type: 'boolean' },
-//                                                 enabled: { type: 'boolean' },
-//                                                 visible: {
-//                                                     type: 'boolean',
-//                                                     default: true
-//                                                 }
-//                                             },
-//                                             required: [
-//                                                 'type',
-//                                                 'label',
-//                                                 'data-source'
-//                                             ]
-//                                         },
-//                                         {
-//                                             type: 'object',
-//                                             properties: {
-//                                                 type: {
-//                                                     type: 'string',
-//                                                     const: 'DatePicker'
-//                                                 },
-//                                                 label: {
-//                                                     type: 'string',
-//                                                     maxLength: 40,
-//                                                     minLength: 1
-//                                                 },
-//                                                 'min-date': {
-//                                                     type: 'string',
-//                                                     format: 'date'
-//                                                 },
-//                                                 'max-date': {
-//                                                     type: 'string',
-//                                                     format: 'date'
-//                                                 },
-//                                                 'unavailable-dates': {
-//                                                     type: 'array',
-//                                                     items: {
-//                                                         type: 'string',
-//                                                         format: 'date'
-//                                                     }
-//                                                 },
-//                                                 required: { type: 'boolean' },
-//                                                 visible: {
-//                                                     type: 'boolean',
-//                                                     default: true
-//                                                 }
-//                                             },
-//                                             required: ['type', 'label']
-//                                         },
-//                                         {
-//                                             type: 'object',
-//                                             properties: {
-//                                                 type: {
-//                                                     type: 'string',
-//                                                     const: 'Image'
-//                                                 },
-//                                                 src: {
-//                                                     type: 'string',
-//                                                     format: 'base64'
-//                                                 },
-//                                                 width: {
-//                                                     type: 'integer',
-//                                                     maximum: 2000
-//                                                 },
-//                                                 height: {
-//                                                     type: 'integer',
-//                                                     maximum: 2000
-//                                                 },
-//                                                 'scale-type': {
-//                                                     type: 'string',
-//                                                     enum: ['cover', 'contain'],
-//                                                     default: 'contain'
-//                                                 },
-//                                                 'aspect-ratio': {
-//                                                     type: 'number',
-//                                                     default: 1
-//                                                 },
-//                                                 'alt-text': {
-//                                                     type: 'string',
-//                                                     maxLength: 100
-//                                                 }
-//                                             },
-//                                             required: [
-//                                                 'type',
-//                                                 'src',
-//                                                 'alt-text'
-//                                             ]
-//                                         }
-//                                     ]
-//                                 }
-//                             }
-//                         },
-//                         required: ['type', 'children']
-//                     }
-//                 },
-//                 required: ['id', 'title', 'layout']
-//             }
-//         }
-//     },
-//     required: ['version', 'screens']
-//     // additionalProperties: false
-// };
 
 // Compile the schema with AJV
 const validate = ajv.compile(schema);

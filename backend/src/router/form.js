@@ -1,7 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
-const { getGoogleFormJson } = require('../controller/form');
+const { getGoogleFormJson, validateFlowJson } = require('../controller/form');
 const router = express.Router();
 
 router.get('/form-json', async (req, res) => {
@@ -153,6 +153,17 @@ router.get('/form-json-1', async (req, res) => {
         });
     } catch (error) {
         console.error('Error scraping form data:', error);
+        res.status(400).send({ _error: error.message });
+    }
+});
+
+router.get('/validate-flow-json', async (req, res) => {
+    try {
+        const flowJson = req.body?.flow_json || {};
+        const isValid = validateFlowJson(flowJson);
+        res.statur(200).send({ is_valid: isValid });
+    } catch (error) {
+        logger.error(error);
         res.status(400).send({ _error: error.message });
     }
 });
