@@ -1,4 +1,4 @@
-const winston = require("../handlers/winston_handler");
+const winston = require('../handlers/winston_handler');
 
 const levels = {
     error: 0,
@@ -70,7 +70,7 @@ module.exports = function (options) {
         message = formatMsg(message, ...args);
         winston.error(message, { module });
     }
-    function stackError(message, type = "warn") {
+    function stackError(message, type = 'warn') {
         try {
             message = JSON.stringify(
                 message,
@@ -80,18 +80,18 @@ module.exports = function (options) {
         } catch (e) {
             //incase JSON stringify fails
         }
-        if (type == "warn") winston.warn(message);
+        if (type == 'warn') winston.warn(message);
         else winston.debug(message);
     }
 
     function checkStackError(message) {
         if (!message) {
-            return "undefined";
+            return 'undefined';
         }
         try {
             if (
-                Object.getOwnPropertyNames(message)[0] == "stack" &&
-                Object.getOwnPropertyNames(message)[1] == "message"
+                Object.getOwnPropertyNames(message)[0] == 'stack' &&
+                Object.getOwnPropertyNames(message)[1] == 'message'
             ) {
                 return JSON.stringify(
                     message,
@@ -106,21 +106,23 @@ module.exports = function (options) {
     }
 
     function formatMsg(message, ...args) {
+        console.log(message, ...args);
+
         try {
             for (var i = 0; i < args.length; i++) {
-                if (args[i] && typeof args[i] == "object") {
+                if (args[i] && typeof args[i] == 'object') {
                     args[i] = checkStackError(args[i]);
                 }
             }
 
             if (args.length > 0) {
-                return message + " " + args;
+                return message + ' ' + args;
             } else {
                 return message;
             }
         } catch (e) {
             // eslint-disable-next-line no-console
-            console.error("logger error", e);
+            console.error('logger error', e);
         }
     }
 

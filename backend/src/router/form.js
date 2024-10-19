@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/form-json', async (req, res) => {
     const { url } = req.query;
     try {
-        const { formTitle, components } = await getGoogleFormJson;
+        const { formTitle, components } = await getGoogleFormJson(url);
         res.status(200).send({
             title: formTitle,
             components

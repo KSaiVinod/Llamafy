@@ -1,7 +1,9 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+const logger = require('../helpers/logger_helper')('ROUTE');
 
 const getGoogleFormJson = async (url) => {
+    logger.info('skdjhfjksdhfjksdhfjks');
     const response = await axios.get(url);
     const html = response.data;
     const $ = cheerio.load(html);
@@ -121,6 +123,8 @@ const getGoogleFormJson = async (url) => {
     });
     return { formTitle, components };
 };
+
+const validateFlowJson = (flowJson) => {};
 
 module.exports = {
     getGoogleFormJson
