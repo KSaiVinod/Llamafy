@@ -1,7 +1,7 @@
 import * as React from 'react'
 function MetaAiIcon(props) {
   return (
-    <svg width='2.5em' height='2.5em' viewBox='0 0 41 40' fill='none' {...props}>
+    <svg width='1em' height='1em' viewBox='0 0 41 40' fill='none' {...props}>
       <g filter='url(#prefix__filter0_d_6378_159649)'>
         <rect x={2.5} y={1} width={36} height={36} rx={18} fill='#fff' />
         <rect x={2.5} y={1} width={36} height={36} rx={18} stroke='#1070F4' strokeWidth={2} />
