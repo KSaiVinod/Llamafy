@@ -27,12 +27,15 @@ app.get('/get-form-json', async (req, res) => {
         const questionsDataArray = questionsData[1][1];
 
         const questions = questionsDataArray.map((questionData) => {
+            // console.log(JSON.stringify(questionData[4]?.[0]?.[2]));
+
             const id = questionData[0];
             const text = questionData[1];
             let type = 'unknown';
             const image = questionData[6] ? questionData[6][0] : null;
             const description = questionData[2];
             const choices = [];
+            const required = questionData[4]?.[0]?.[2] === 1;
             let otherInput;
 
             switch (questionData[3]) {
@@ -107,6 +110,7 @@ app.get('/get-form-json', async (req, res) => {
                 text: text,
                 type: type,
                 image,
+                required,
                 description,
                 choices: choices.length > 0 ? choices : undefined,
                 otherInput
