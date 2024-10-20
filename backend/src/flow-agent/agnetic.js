@@ -1,5 +1,5 @@
 const Bedrock = require("./bedrock");
-const forms = require("./forms");
+const forms = require("./form");
 const Tunehq = require("./tunehq");
 const wf = require("./workflow.json");
 const {
