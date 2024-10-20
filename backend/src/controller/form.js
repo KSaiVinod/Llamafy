@@ -660,10 +660,76 @@ const validateFlowJson = (flowJson) => {
     return isValid;
 };
 
+
+const validateComponent = async (type, json) => {
+    let schema;
+    switch (type) {
+        case 'RadioButtonsGroup':
+            schema = radioButtonsGroupSchema;
+            break;
+        case 'CheckboxGroup':
+            schema = checkboxGroupSchema;
+            break;
+        case 'TextInput':
+            schema = textInputSchema;
+            break;
+        case 'TextHeading':
+            schema = textHeadingSchema;
+            break;
+        case 'TextSubheading':
+            schema = textSubheadingSchema;
+            break;
+        case 'TextBody':
+            schema = textBodySchema;
+            break;
+        case 'TextCaption':
+            schema = textCaptionSchema;
+            break;
+        case 'RichText':
+            schema = richTextSchema;
+            break;
+        case 'TextArea':
+            schema = textAreaSchema;
+            break;
+        case 'Dropdown':
+            schema = dropdownSchema;
+            break;
+        case 'DatePicker':
+            schema = datePickerSchema;
+            break;
+        case 'Image':
+            schema = imageSchema;
+            break;
+        case 'Footer':
+            schema = footerSchema;
+            break;
+    }
+    try {
+        const validate = ajv.compile(schema);
+        const isValid = validate(json);
+        logger.info('Is the data valid?', isValid);
+
+        return { isValid };
+    } catch (error) {
+        return { isValid: false, errors: error };
+    }
+};
+
 module.exports = {
     radioButtonsGroupSchema,
     checkboxGroupSchema,
     textInputSchema,
+    textHeadingSchema,
+    textSubheadingSchema,
+    textBodySchema,
+    textCaptionSchema,
+    richTextSchema,
+    textAreaSchema,
+    dropdownSchema,
+    datePickerSchema,
+    imageSchema,
+    footerSchema,
     getGoogleFormJson,
     validateFlowJson,
+    validateComponent
 };
