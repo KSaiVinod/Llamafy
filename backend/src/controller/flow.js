@@ -1,9 +1,10 @@
 const fs = require('fs')
 const FormData = require('form-data')
-const logger = require('../handlers/winston_handler')
+const logger = require('../helpers/logger_helper')('FLOW_CONTROLLER')
 const Queue = require('../helpers/queues_helper')
 const { default: axios } = require('axios')
 const redis_handler = require('../helpers/redis_handler')
+const stream = require('stream')
 
 class FlowController {
   async processRequest(data) {
@@ -27,18 +28,23 @@ class FlowController {
     }
   }
 
-  async createFlowTemplate(data) {
+  async updateFlowTemplate(data, token_id) {
     try {
-      fs.writeFileSync('test.json', data.content, err => {
-        throw Error('Unable to create json file')
-      })
+      const JSONString = JSON.stringify(data)
+
+      const bufferStream = new stream.PassThrough()
+      bufferStream.end(Buffer.from(JSONString))
+
       const form = new FormData()
-      form.append('file', fs.createReadStream('test.json'), { contentType: 'application/json' })
-      form.append('name', 'test.json')
+      form.append('name', 'flow.json')
       form.append('asset_type', 'FLOW_JSON')
+      form.append('file', bufferStream, {
+        filename: 'flow.json',
+        contentType: 'application/json'
+      })
 
       axios
-        .post(`${process.env.META_BASE_URL}/${data.flow_id}/assets`, form, {
+        .post(`${process.env.META_BASE_URL}/${token_id}/assets`, form, {
           headers: {
             Authorization: `Bearer ${process.env.META_BEARER_TOKEN}`,
             ...form.getHeaders()
@@ -48,17 +54,42 @@ class FlowController {
           return res
         })
         .catch(error => {
-          logger.error(error, data)
+          logger.error(error.response)
         })
     } catch (error) {
       console.log('Error While Creating Meta Flow', error?.message)
-      logger.error(error, data)
+      logger.error(error)
+    }
+  }
+
+  async createFlowTemplate(request_id) {
+    try {
+      axios
+        .post(
+          `${process.env.META_BASE_URL}/${process.env.META_WABA_ID}/flows`,
+          {
+            name: `test_flow_${request_id}`,
+            categories: ['OTHER']
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.META_BEARER_TOKEN}`
+            }
+          }
+        )
+        .then(res => res)
+        .catch(err => {
+          logger.error(err?.message, request_id)
+        })
+    } catch (error) {
+      console.log('Error While Creating Meta Flow', error?.message)
+      logger.error(error, request_id)
     }
   }
 
   async generatePreviewUrl(flow_id) {
     try {
-      axios
+      return axios
         .get(`${process.env.META_BASE_URL}/${flow_id}?fields=preview.invalidate(false)`, {
           headers: {
             Authorization: `Bearer ${process.env.META_BEARER_TOKEN}`
@@ -68,10 +99,10 @@ class FlowController {
           return res.data
         })
         .catch(err => {
-          logger.error(err, flow_id)
+          logger.error(err.response, flow_id)
         })
     } catch (error) {
-      logger.error(error, flow_id)
+      logger.error(error.message, flow_id)
     }
   }
 

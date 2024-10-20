@@ -19,6 +19,7 @@ import '@/styles/dracula.json'
 import '@/styles/iplastic.json'
 import { useGlobalContext } from '@/context/GlobalContext'
 import Link from 'next/link'
+import SkeletonLoader from './SkeletonLoader'
 
 const CustomOutlinedInput = styled(OutlinedInput)(({ theme }) => ({
   borderRadius: '20px'
@@ -27,7 +28,8 @@ const CustomOutlinedInput = styled(OutlinedInput)(({ theme }) => ({
 const OutlinedBox = styled(Box)(({ theme }) => ({
   border: '1px solid',
   borderColor: theme.palette.divider,
-  padding: '1rem'
+  padding: '1rem',
+  borderRadius: '10px'
 }))
 
 const options = {
@@ -75,7 +77,8 @@ export const LeftSideForm = () => {
   const [inputValue, setInputValue] = useState('')
   const [showField, setShowField] = useState(true)
 
-  const { handleGenerateTemplate, handleShowPreview, generatedContent, setGeneratedContent } = useGlobalContext()
+  const { handleGenerateTemplate, handleShowPreview, generatedContent, setGeneratedContent, generatedData } =
+    useGlobalContext()
   return (
     <Grid2 container paddingInline={'1rem'} spacing={2}>
       <Grid2 item size={12} display={'flex'} alignItems={'center'} justifyContent={'space-between'}>
@@ -97,14 +100,22 @@ export const LeftSideForm = () => {
                 placeholder={'Ask Llama anything'}
                 sx={{ display: 'flex', alignItems: 'flex-start' }}
                 startAdornment={
-                  <InputAdornment position='start' sx={{ mr: '10px' }}>
+                  <InputAdornment position='start'>
                     <MemoMetaAiIcon width={'1.5em'} height={'1.5em'} />
                   </InputAdornment>
                 }
                 endAdornment={
                   <InputAdornment position='end'>
                     <Fade in={inputValue?.length > 0} unmountOnExit>
-                      <IconButton size='small' color={'success'} onClick={() => handleGenerateTemplate(inputValue)}>
+                      <IconButton
+                        sx={{ width: '1.5rem', height: '1.5rem' }}
+                        color={'success'}
+                        onClick={() => {
+                          handleGenerateTemplate(inputValue)
+                          setInputValue('')
+                          setShowField(false)
+                        }}
+                      >
                         <CheckCircleOutline />
                       </IconButton>
                     </Fade>
@@ -119,20 +130,28 @@ export const LeftSideForm = () => {
         </Collapse>
       </Grid2>
       <Grid2 item size={12}>
-        <OutlinedBox>
-          <Editor
-            options={options}
-            height={'50vh'}
-            defaultLanguage={'json'}
-            value={generatedContent}
-            onChange={value => setGeneratedContent(value)}
-          />
-        </OutlinedBox>
+        {!generatedData || generatedData?.result?.done ? (
+          <OutlinedBox>
+            <Editor
+              options={options}
+              height={'65vh'}
+              defaultLanguage={'json'}
+              value={generatedContent}
+              onChange={value => setGeneratedContent(value)}
+            />
+          </OutlinedBox>
+        ) : (
+          <OutlinedBox minHeight={'68vh'} maxHeight={'65vh'}>
+            <SkeletonLoader step={generatedData?.result?.status} />
+          </OutlinedBox>
+        )}
       </Grid2>
       <Grid2 item size={12} align={'right'}>
-        <Button variant={'contained'} onClick={handleShowPreview}>
-          Show Preview
-        </Button>
+        {(!generatedData || generatedData?.result?.done) && (
+          <Button variant={'contained'} onClick={handleShowPreview}>
+            Show Preview
+          </Button>
+        )}
       </Grid2>
     </Grid2>
   )

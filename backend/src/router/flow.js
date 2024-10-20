@@ -20,26 +20,30 @@ router.post('/flow/generate', async (req, res) => {
   }
 })
 
-router.post('/flow/create', async (req, res) => {
+router.post('/flow/update', async (req, res) => {
   const flow = new FlowController()
 
   try {
-    const result = await flow.createFlowTemplate(req.body)
+    const result = await flow.updateFlowTemplate(req.body)
 
     res.status(200).send({
       result
     })
   } catch (error) {
-    console.log('Error while creating/updating flow template')
+    console.log('Error while updating flow template')
   }
 })
 
-router.get('/flow/preview', async (req, res) => {
+router.post('/flow/preview', async (req, res) => {
   const flow = new FlowController()
 
   try {
-    const { flow_id } = req.params
-    const result = await flow.generatePreviewUrl(flow_id)
+    const { token_id } = req.query
+    const { content } = req.body
+    const update = await flow.updateFlowTemplate(content, token_id)
+    const result = await flow.generatePreviewUrl(token_id)
+
+    console.log('>>>>>>>>>>>>>>>>>>>', result)
 
     res.status(200).send({
       result,
@@ -67,18 +71,20 @@ router.get('/flow/status', async (req, res) => {
         status: 'ok'
       })
     } else {
-      const result = await flow.getGeneratedJSON(job_id)
+      const generatedContent = await flow.getGeneratedJSON(job_id)
+      // const result = await flow.createFlowTemplate(job_id)
       res.status(200).send({
         result: {
           done: true,
           status: 'completed',
-          content: result
+          // token_id: result?.id,
+          content: generatedContent
         },
         status: 'ok'
       })
     }
   } catch (error) {
-    console.log('Error While fetching status')
+    console.log('Error While fetching status', error.message)
   }
 })
 

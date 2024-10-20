@@ -14,7 +14,8 @@ export const GlobalContext = React.createContext({
   previewContent: {},
   loadingPreview: false,
   reloadPreview: () => {},
-  handleShowPreview: () => {}
+  handleShowPreview: () => {},
+  generatedData: {}
 })
 
 export const useGlobalContext = () => useContext(GlobalContext)
@@ -22,14 +23,16 @@ export const useGlobalContext = () => useContext(GlobalContext)
 export const GlboalProvider = ({ children }) => {
   const [tokenId, setTokenId] = useState('')
   const [requestId, setRequestId] = useState('')
+  const [previewUrl, setPreviewUrl] = useState('')
   const [generatedContent, setGeneratedContent] = useState('')
   const { mutate: generateContent, isLoading: generatingContent } = useGenerateJSON()
-  const { data: previewContent, isLoading: loadingPreview, refetch: reloadPreview } = useGeneratePreview(tokenId)
   const { data: generatedData, isLoading: loadingGeneratedData } = useGetGeneratedJson(requestId)
+  const { mutate: previewContent, isLoading: loadingPreview } = useGeneratePreview()
 
   useEffect(() => {
     if (generatedData?.result?.done) {
       setGeneratedContent(JSON.stringify(generatedData?.result?.content, null, 4))
+      setTokenId(generatedData?.result?.token_id || '3354633534666753')
     }
   }, [JSON.stringify(generatedData)])
 
@@ -45,7 +48,14 @@ export const GlboalProvider = ({ children }) => {
   }
 
   const handleShowPreview = () => {
-    reloadPreview(tokenId)
+    previewContent(
+      { id: tokenId, content: generatedContent },
+      {
+        onSuccess: ({ data }) => {
+          setPreviewUrl(data?.result?.preview?.preview_url)
+        }
+      }
+    )
   }
 
   const contextValue = {
@@ -58,7 +68,9 @@ export const GlboalProvider = ({ children }) => {
     handleShowPreview,
     previewContent,
     loadingPreview,
-    reloadPreview
+    generatedData,
+    previewUrl,
+    setPreviewUrl
   }
 
   return <GlobalContext.Provider value={contextValue}>{children}</GlobalContext.Provider>

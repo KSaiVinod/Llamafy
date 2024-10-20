@@ -1,12 +1,12 @@
 import axios from 'axios'
-import { useQuery } from 'react-query'
+import { useMutation, useQuery } from 'react-query'
 
-const generatePreview = async id => {
-  return axios.get(`${process.env.NEXT_PUBLIC_API_GATEWAY}/flow/preview?token_id=${id}`).then(res => res.data)
+const generatePreview = async (id, content) => {
+  return axios
+    .post(`${process.env.NEXT_PUBLIC_API_GATEWAY}/flow/preview?token_id=${id}`, { content: JSON.parse(content) })
+    .then(res => res)
 }
 
-export const useGeneratePreview = id => {
-  return useQuery(['Preview', id], () => generatePreview(id), {
-    enabled: Boolean(id)
-  })
+export const useGeneratePreview = () => {
+  return useMutation(({ id, content }) => generatePreview(id, content))
 }

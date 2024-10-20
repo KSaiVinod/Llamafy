@@ -1,17 +1,20 @@
-import { useGeneratePreview } from '@/hooks/useGetPreview'
-import { Box, Grid2 } from '@mui/material'
+import { useGlobalContext } from '@/context/GlobalContext'
+import { Box, CircularProgress, Grid2, Typography } from '@mui/material'
 
 export const PreviewComponent = () => {
-  const { data: previewData } = useGeneratePreview()
-
+  const { loadingPreview, previewUrl } = useGlobalContext()
   return (
     <Grid2 container heigth={'100%'} position={'relative'}>
-      <Grid2 item sx={{ position: 'absolute', left: 50 }}>
-        <iframe
-          src='https://business.facebook.com/wa/manage/flows/430099223269725/preview/?token=9beaafe3-fe35-435e-b4f6-45570386876c'
-          width='460px'
-          height='900px'
-        />
+      <Grid2 item size={12} sx={{ position: 'absolute', left: 100 }}>
+        {loadingPreview ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+            <CircularProgress />
+          </Box>
+        ) : !previewUrl ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}></Box>
+        ) : (
+          <iframe src={previewUrl} width='460px' height='900px' />
+        )}
       </Grid2>
     </Grid2>
   )

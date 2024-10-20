@@ -40,3 +40,26 @@ a {
     color-scheme: dark;
   }
 }
+
+.skeleton-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.skeleton-line {
+  height: 30px;
+  background: linear-gradient(90deg, #a0d3d1 20%, #b3d9ff 40%, #ffc2e0 60%, #ffb3d1 80%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 2s infinite;
+  border-radius: 4px;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
