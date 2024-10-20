@@ -31,7 +31,7 @@ async function callLlama3API(userMessage, input) {
     const request = {
         prompt,
         max_gen_len: 512, // Optional inference parameters
-        temperature: 0.1,
+        temperature: 0.2,
         top_p: 0.9,
     };
 

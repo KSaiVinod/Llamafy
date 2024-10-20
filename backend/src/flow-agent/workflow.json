@@ -44,7 +44,7 @@
         },
         "step_4": {
             "bedrock": {
-                "user_message": "You are a Meta FLOW JSON and nodejs expert. I have attached the ajv validation schema. Give me a finaly output that strictly adhers to the ajv schema. Make sure to respond only with JSON {{{input.ajv}}}. This was the user input {{{input.component}}}. Give me only JSON without formatting which strictly passes the ajv validation schema",
+                "user_message": "You are a JSON and nodejs expert. This is the JSON extracted from google forms {{{input.component}}} Convert this JSON to meta JSON which is provided as a schema in an ajv validation. Transform all the keys according to schema {{{input.ajv}}}. Make sure the output JSON would pass the validation strictly of the ajv schema.  Give me only proper JSON without formatting.",
                 "save_to": "flow_json"
             },
             "next": {

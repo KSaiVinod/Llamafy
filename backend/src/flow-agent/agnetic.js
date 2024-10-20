@@ -1,5 +1,5 @@
 const Bedrock = require("./bedrock");
-const forms = require("./form");
+const forms = require("../controller/form");
 const Tunehq = require("./tunehq");
 const wf = require("./workflow.json");
 const {
@@ -214,6 +214,8 @@ class ProcessWorkflow {
                 this.ip[node.validation.save_to] = JSON.stringify(
                     radioButtonsGroupSchema
                 );
+                console.log("!!!!!");
+                console.log(this.ip);
                 if (node.next) {
                     this.node_id = node.next.id;
                     return this.data.workflow[node.next.id];
