@@ -1,516 +1,516 @@
-const axios = require('axios');
-const cheerio = require('cheerio');
-const Ajv = require('ajv');
-const logger = require('../helpers/logger_helper')('FORM_CONTROLLER');
+const axios = require("axios");
+const cheerio = require("cheerio");
+const Ajv = require("ajv");
+const logger = require("../helpers/logger_helper")("FORM_CONTROLLER");
 const ajv = new Ajv({ allErrors: true });
 
-ajv.addFormat('base64', {
-    type: 'string',
+ajv.addFormat("base64", {
+    type: "string",
     validate: (base64String) => {
         return /^(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+\/]{3}=)?$/.test(
             base64String
         );
-    }
+    },
 });
 
-ajv.addFormat('date', {
-    type: 'string',
+ajv.addFormat("date", {
+    type: "string",
     validate: (dateString) => {
         return /^\d{4}-\d{2}-\d{2}$/.test(dateString);
-    }
+    },
 });
 
 const textHeadingSchema = {
-    type: 'object',
+    type: "object",
     properties: {
         type: {
-            type: 'string',
-            const: 'TextHeading'
+            type: "string",
+            const: "TextHeading",
         },
         text: {
-            type: 'string',
+            type: "string",
             maxLength: 80,
-            minLength: 1
-        }
+            minLength: 1,
+        },
     },
-    required: ['type', 'text']
+    required: ["type", "text"],
 };
 
 const textSubheadingSchema = {
-    type: 'object',
+    type: "object",
     properties: {
         type: {
-            type: 'string',
-            const: 'TextSubheading'
+            type: "string",
+            const: "TextSubheading",
         },
         text: {
-            type: 'string',
+            type: "string",
             maxLength: 80,
-            minLength: 1
-        }
+            minLength: 1,
+        },
     },
-    required: ['type', 'text']
+    required: ["type", "text"],
 };
 
 const textBodySchema = {
-    type: 'object',
+    type: "object",
     properties: {
         type: {
-            type: 'string',
-            const: 'TextBody'
+            type: "string",
+            const: "TextBody",
         },
         text: {
-            type: 'string',
+            type: "string",
             maxLength: 4096,
-            minLength: 1
+            minLength: 1,
         },
-        'font-weight': {
-            type: 'string',
-            enum: ['bold', 'italic', 'bold_italic', 'normal']
+        "font-weight": {
+            type: "string",
+            enum: ["bold", "italic", "bold_italic", "normal"],
         },
         strikethrough: {
-            type: 'boolean'
+            type: "boolean",
         },
         markdown: {
-            type: 'boolean',
-            default: false
-        }
+            type: "boolean",
+            default: false,
+        },
     },
-    required: ['type', 'text']
+    required: ["type", "text"],
 };
 
 const textCaptionSchema = {
-    type: 'object',
+    type: "object",
     properties: {
         type: {
-            type: 'string',
-            const: 'TextCaption'
+            type: "string",
+            const: "TextCaption",
         },
         text: {
-            type: 'string',
+            type: "string",
             maxLength: 409,
-            minLength: 1
+            minLength: 1,
         },
-        'font-weight': {
-            type: 'string',
-            enum: ['bold', 'italic', 'bold_italic', 'normal']
+        "font-weight": {
+            type: "string",
+            enum: ["bold", "italic", "bold_italic", "normal"],
         },
         strikethrough: {
-            type: 'boolean'
+            type: "boolean",
         },
         markdown: {
-            type: 'boolean',
-            default: false
+            type: "boolean",
+            default: false,
         },
         visible: {
-            type: 'boolean',
-            default: true
-        }
+            type: "boolean",
+            default: true,
+        },
     },
-    required: ['type', 'text']
+    required: ["type", "text"],
 };
 
 const richTextSchema = {
-    type: 'object',
+    type: "object",
     additionalProperties: false,
 
     properties: {
-        type: { type: 'string', const: 'RichText' },
+        type: { type: "string", const: "RichText" },
         name: {
-            type: 'string'
+            type: "string",
         },
         text: {
             oneOf: [
-                { type: 'string', minLength: 1 },
+                { type: "string", minLength: 1 },
                 {
-                    type: 'array',
-                    items: { type: 'string' },
-                    minItems: 1
-                }
-            ]
+                    type: "array",
+                    items: { type: "string" },
+                    minItems: 1,
+                },
+            ],
         },
-        visible: { type: 'boolean', default: true }
+        visible: { type: "boolean", default: true },
     },
-    required: ['type', 'text', 'name']
+    required: ["type", "text", "name"],
 };
 
 const textInputSchema = {
-    type: 'object',
+    type: "object",
     properties: {
         type: {
-            type: 'string',
-            const: 'TextInput'
+            type: "string",
+            const: "TextInput",
         },
         label: {
-            type: 'string',
+            type: "string",
             maxLength: 20,
-            minLength: 1
+            minLength: 1,
         },
         name: {
-            type: 'string'
+            type: "string",
         },
-        'input-type': {
-            type: 'string',
-            enum: ['text', 'number', 'email', 'password', 'passcode', 'phone']
+        "input-type": {
+            type: "string",
+            enum: ["text", "number", "email", "password", "passcode", "phone"],
         },
-        required: { type: 'boolean' },
-        'helper-text': {
-            type: 'string',
-            maxLength: 80
+        required: { type: "boolean" },
+        "helper-text": {
+            type: "string",
+            maxLength: 80,
         },
-        'min-chars': {
-            type: 'integer',
-            minimum: 1
+        "min-chars": {
+            type: "integer",
+            minimum: 1,
         },
-        'max-chars': {
-            type: 'integer',
+        "max-chars": {
+            type: "integer",
             maximum: 80,
-            default: 80
+            default: 80,
         },
         visible: {
-            type: 'boolean',
-            default: true
-        }
+            type: "boolean",
+            default: true,
+        },
     },
-    required: ['type', 'label', 'name']
+    required: ["type", "label", "name"],
 };
 
 const textAreaSchema = {
-    type: 'object',
+    type: "object",
     properties: {
         type: {
-            type: 'string',
-            const: 'TextArea'
+            type: "string",
+            const: "TextArea",
         },
         label: {
-            type: 'string',
+            type: "string",
             maxLength: 20,
-            minLength: 1
+            minLength: 1,
         },
         name: {
-            type: 'string'
+            type: "string",
         },
-        required: { type: 'boolean' },
-        'helper-text': {
-            type: 'string',
-            maxLength: 80
+        required: { type: "boolean" },
+        "helper-text": {
+            type: "string",
+            maxLength: 80,
         },
-        'max-length': {
-            type: 'integer',
-            default: 600
+        "max-length": {
+            type: "integer",
+            default: 600,
         },
         visible: {
-            type: 'boolean',
-            default: true
-        }
+            type: "boolean",
+            default: true,
+        },
     },
-    required: ['type', 'label', 'name']
+    required: ["type", "label", "name"],
 };
 
 const checkboxGroupSchema = {
-    type: 'object',
+    type: "object",
     properties: {
         type: {
-            type: 'string',
-            const: 'CheckboxGroup'
+            type: "string",
+            const: "CheckboxGroup",
         },
         label: {
-            type: 'string',
+            type: "string",
             maxLength: 30,
-            minLength: 1
+            minLength: 1,
         },
         name: {
-            type: 'string'
+            type: "string",
         },
-        'data-source': {
-            type: 'array',
+        "data-source": {
+            type: "array",
             minItems: 1,
             maxItems: 20,
             items: {
-                type: 'object',
+                type: "object",
                 properties: {
                     id: {
-                        type: 'string'
+                        type: "string",
                     },
                     title: {
-                        type: 'string',
-                        maxLength: 30
-                    }
-                }
-            }
+                        type: "string",
+                        maxLength: 30,
+                    },
+                },
+            },
         },
-        'min-selected-items': {
-            type: 'integer'
+        "min-selected-items": {
+            type: "integer",
         },
-        'max-selected-items': {
-            type: 'integer'
+        "max-selected-items": {
+            type: "integer",
         },
-        required: { type: 'boolean' },
-        enabled: { type: 'boolean' },
+        required: { type: "boolean" },
+        enabled: { type: "boolean" },
         visible: {
-            type: 'boolean',
-            default: true
-        }
+            type: "boolean",
+            default: true,
+        },
     },
-    required: ['type', 'label', 'data-source', 'name']
+    required: ["type", "label", "data-source", "name"],
 };
 
 const radioButtonsGroupSchema = {
-    type: 'object',
+    type: "object",
     properties: {
         type: {
-            type: 'string',
-            const: 'RadioButtonsGroup'
+            type: "string",
+            const: "RadioButtonsGroup",
         },
         name: {
-            type: 'string'
+            type: "string",
         },
         label: {
-            type: 'string',
+            type: "string",
             maxLength: 30,
-            minLength: 1
+            minLength: 1,
         },
-        'data-source': {
-            type: 'array',
+        "data-source": {
+            type: "array",
             minItems: 1,
             maxItems: 20,
             items: {
-                type: 'object',
+                type: "object",
                 properties: {
                     id: {
-                        type: 'string'
+                        type: "string",
                     },
                     title: {
-                        type: 'string',
-                        maxLength: 30
-                    }
-                }
-            }
+                        type: "string",
+                        maxLength: 30,
+                    },
+                },
+            },
         },
-        required: { type: 'boolean' },
-        enabled: { type: 'boolean' },
+        required: { type: "boolean" },
+        enabled: { type: "boolean" },
         visible: {
-            type: 'boolean',
-            default: true
-        }
+            type: "boolean",
+            default: true,
+        },
     },
-    required: ['type', 'label', 'data-source', 'name']
+    required: ["type", "label", "data-source", "name"],
 };
 
 const dropdownSchema = {
-    type: 'object',
+    type: "object",
     properties: {
         type: {
-            type: 'string',
-            const: 'Dropdown'
+            type: "string",
+            const: "Dropdown",
         },
         name: {
-            type: 'string'
+            type: "string",
         },
         label: {
-            type: 'string',
+            type: "string",
             maxLength: 20,
-            minLength: 1
+            minLength: 1,
         },
-        'data-source': {
-            type: 'array',
+        "data-source": {
+            type: "array",
             minItems: 1,
             maxItems: 200,
             items: {
-                type: 'object',
+                type: "object",
                 properties: {
                     id: {
-                        type: 'string'
+                        type: "string",
                     },
                     title: {
-                        type: 'string',
-                        maxLength: 30
-                    }
-                }
-            }
+                        type: "string",
+                        maxLength: 30,
+                    },
+                },
+            },
         },
-        required: { type: 'boolean' },
-        enabled: { type: 'boolean' },
+        required: { type: "boolean" },
+        enabled: { type: "boolean" },
         visible: {
-            type: 'boolean',
-            default: true
-        }
+            type: "boolean",
+            default: true,
+        },
     },
-    required: ['type', 'label', 'name', 'data-source']
+    required: ["type", "label", "name", "data-source"],
 };
 
 const datePickerSchema = {
-    type: 'object',
+    type: "object",
     properties: {
         type: {
-            type: 'string',
-            const: 'DatePicker'
+            type: "string",
+            const: "DatePicker",
         },
         label: {
-            type: 'string',
+            type: "string",
             maxLength: 40,
-            minLength: 1
+            minLength: 1,
         },
         name: {
-            type: 'string'
+            type: "string",
         },
-        'min-date': {
-            type: 'string',
-            format: 'date'
+        "min-date": {
+            type: "string",
+            format: "date",
         },
-        'max-date': {
-            type: 'string',
-            format: 'date'
+        "max-date": {
+            type: "string",
+            format: "date",
         },
-        'unavailable-dates': {
-            type: 'array',
+        "unavailable-dates": {
+            type: "array",
             items: {
-                type: 'string',
-                format: 'date'
-            }
+                type: "string",
+                format: "date",
+            },
         },
-        required: { type: 'boolean' },
+        required: { type: "boolean" },
         visible: {
-            type: 'boolean',
-            default: true
-        }
+            type: "boolean",
+            default: true,
+        },
     },
-    required: ['type', 'label', 'name']
+    required: ["type", "label", "name"],
 };
 
 const imageSchema = {
-    type: 'object',
+    type: "object",
     properties: {
         type: {
-            type: 'string',
-            const: 'Image'
+            type: "string",
+            const: "Image",
         },
         name: {
-            type: 'string'
+            type: "string",
         },
         src: {
-            type: 'string',
-            format: 'base64'
+            type: "string",
+            format: "base64",
         },
         width: {
-            type: 'integer',
-            maximum: 2000
+            type: "integer",
+            maximum: 2000,
         },
         height: {
-            type: 'integer',
-            maximum: 2000
+            type: "integer",
+            maximum: 2000,
         },
-        'scale-type': {
-            type: 'string',
-            enum: ['cover', 'contain'],
-            default: 'contain'
+        "scale-type": {
+            type: "string",
+            enum: ["cover", "contain"],
+            default: "contain",
         },
-        'aspect-ratio': {
-            type: 'number',
-            default: 1
+        "aspect-ratio": {
+            type: "number",
+            default: 1,
         },
-        'alt-text': {
-            type: 'string',
-            maxLength: 100
-        }
+        "alt-text": {
+            type: "string",
+            maxLength: 100,
+        },
     },
-    required: ['type', 'src', 'alt-text', 'name']
+    required: ["type", "src", "alt-text", "name"],
 };
 
 const footerSchema = {
-    type: 'object',
+    type: "object",
     additionalProperties: false,
     properties: {
-        type: { type: 'string', const: 'Footer' },
-        label: { type: 'string', minLength: 1, maxLength: 35 },
-        'left-caption': { type: 'string', maxLength: 15 },
-        'right-caption': { type: 'string', maxLength: 15 },
-        'center-caption': { type: 'string', maxLength: 15 },
-        enabled: { type: 'boolean' },
-        'on-click-action': {
-            type: 'object',
+        type: { type: "string", const: "Footer" },
+        label: { type: "string", minLength: 1, maxLength: 35 },
+        "left-caption": { type: "string", maxLength: 15 },
+        "right-caption": { type: "string", maxLength: 15 },
+        "center-caption": { type: "string", maxLength: 15 },
+        enabled: { type: "boolean" },
+        "on-click-action": {
+            type: "object",
             additionalProperties: false,
             properties: {
-                name: { type: 'string' },
-                next: { type: 'object' },
-                payload: { type: 'object' }
+                name: { type: "string" },
+                next: { type: "object" },
+                payload: { type: "object" },
             },
-            required: ['name']
-        }
+            required: ["name"],
+        },
     },
-    required: ['type', 'label', 'on-click-action']
+    required: ["type", "label", "on-click-action"],
 };
 
 // Define the complete schema for the flow JSON
 const schema = {
-    $schema: 'http://json-schema.org/draft-07/schema#',
-    title: 'WhatsApp Flow Schema',
-    type: 'object',
+    $schema: "http://json-schema.org/draft-07/schema#",
+    title: "WhatsApp Flow Schema",
+    type: "object",
     properties: {
         version: {
-            type: 'string',
-            description: 'Version of the flow',
-            enum: ['1.0', '2.0', '3.0', '3.1', '4.0', '5.0', '5.1']
+            type: "string",
+            description: "Version of the flow",
+            enum: ["1.0", "2.0", "3.0", "3.1", "4.0", "5.0", "5.1"],
         },
         screens: {
-            type: 'array',
-            description: 'List of screens in the flow',
+            type: "array",
+            description: "List of screens in the flow",
             items: {
-                type: 'object',
+                type: "object",
                 properties: {
                     id: {
-                        type: 'string'
+                        type: "string",
                     },
                     title: {
-                        type: 'string'
+                        type: "string",
                     },
                     data: {
-                        type: 'object'
+                        type: "object",
                     },
                     terminal: {
-                        type: 'boolean',
-                        default: false
+                        type: "boolean",
+                        default: false,
                     },
                     layout: {
-                        type: 'object',
+                        type: "object",
                         properties: {
                             type: {
-                                type: 'string',
-                                const: 'SingleColumnLayout'
+                                type: "string",
+                                const: "SingleColumnLayout",
                             },
                             children: {
-                                type: 'array',
+                                type: "array",
                                 items: {
                                     oneOf: [
-                                        { $ref: '#/definitions/textHeading' },
+                                        { $ref: "#/definitions/textHeading" },
                                         {
-                                            $ref: '#/definitions/textSubheading'
+                                            $ref: "#/definitions/textSubheading",
                                         },
-                                        { $ref: '#/definitions/textBody' },
-                                        { $ref: '#/definitions/textCaption' },
-                                        { $ref: '#/definitions/richText' },
-                                        { $ref: '#/definitions/textInput' },
-                                        { $ref: '#/definitions/textArea' },
-                                        { $ref: '#/definitions/checkboxGroup' },
+                                        { $ref: "#/definitions/textBody" },
+                                        { $ref: "#/definitions/textCaption" },
+                                        { $ref: "#/definitions/richText" },
+                                        { $ref: "#/definitions/textInput" },
+                                        { $ref: "#/definitions/textArea" },
+                                        { $ref: "#/definitions/checkboxGroup" },
                                         {
-                                            $ref: '#/definitions/radioButtonsGroup'
+                                            $ref: "#/definitions/radioButtonsGroup",
                                         },
-                                        { $ref: '#/definitions/dropdown' },
-                                        { $ref: '#/definitions/datePicker' },
-                                        { $ref: '#/definitions/image' },
-                                        { $ref: '#/definitions/footer' }
-                                    ]
-                                }
-                            }
+                                        { $ref: "#/definitions/dropdown" },
+                                        { $ref: "#/definitions/datePicker" },
+                                        { $ref: "#/definitions/image" },
+                                        { $ref: "#/definitions/footer" },
+                                    ],
+                                },
+                            },
                         },
-                        required: ['type', 'children']
-                    }
+                        required: ["type", "children"],
+                    },
                 },
-                required: ['id', 'title', 'layout']
-            }
-        }
+                required: ["id", "title", "layout"],
+            },
+        },
     },
-    required: ['version', 'screens'],
+    required: ["version", "screens"],
     additionalProperties: false,
     definitions: {
         textHeading: textHeadingSchema,
@@ -525,20 +525,20 @@ const schema = {
         dropdown: dropdownSchema,
         datePicker: datePickerSchema,
         image: imageSchema,
-        footer: footerSchema
-    }
+        footer: footerSchema,
+    },
 };
 
 const getGoogleFormJson = async (url) => {
-    logger.info('skdjhfjksdhfjksdhfjks');
+    logger.info("skdjhfjksdhfjksdhfjks");
     const response = await axios.get(url);
     const html = response.data;
     const $ = cheerio.load(html);
 
     const scriptContent = $('script:contains("FB_PUBLIC_LOAD_DATA_")').html();
 
-    const beginIndex = scriptContent.indexOf('[');
-    const lastIndex = scriptContent.lastIndexOf(';');
+    const beginIndex = scriptContent.indexOf("[");
+    const lastIndex = scriptContent.lastIndexOf(";");
     const jsonData = scriptContent.substring(beginIndex, lastIndex).trim();
     const questionsData = JSON.parse(jsonData);
     const formTitle = questionsData[1][0];
@@ -550,7 +550,7 @@ const getGoogleFormJson = async (url) => {
         let maxValidation = null;
         const id = questionData[0];
         const text = questionData[1];
-        let type = 'unknown';
+        let type = "unknown";
         const image = questionData[6] ? questionData[6][0] : null;
         const description = questionData[2];
         const choices = [];
@@ -567,72 +567,72 @@ const getGoogleFormJson = async (url) => {
         // minValidation = JSON.stringify();
         // maxValidation = JSON.stringify(questionData[4]?.[0]?.[4]?.[0]); // 200 = min, 201 = max, 204 = exact
         // }
-        console.log(minValidation, '\n\n');
+        console.log(minValidation, "\n\n");
 
         let otherInput;
 
         switch (questionData[3]) {
             case 2:
-                type = 'radio';
+                type = "radio";
                 questionData[4][0][1].forEach((choice) => {
-                    if (choice[0] && choice[0] != '') choices.push(choice[0]);
+                    if (choice[0] && choice[0] != "") choices.push(choice[0]);
                     else otherInput = true;
                 });
                 break;
             case 4:
-                type = 'checkbox';
+                type = "checkbox";
                 questionData[4][0][1].forEach((choice) => {
-                    if (choice[0] && choice[0] != '') choices.push(choice[0]);
+                    if (choice[0] && choice[0] != "") choices.push(choice[0]);
                     else otherInput = true;
                 });
                 break;
             case 3:
-                type = 'dropdown';
+                type = "dropdown";
                 questionData[4][0][1].forEach((choice) => {
-                    if (choice[0] && choice[0] != '') choices.push(choice[0]);
+                    if (choice[0] && choice[0] != "") choices.push(choice[0]);
                     else otherInput = true;
                 });
                 break;
             case 1:
-                type = 'text-input';
+                type = "text-input";
                 break;
             case 0:
-                type = 'text-area';
+                type = "text-area";
                 break;
             case 7:
-                type = 'date';
+                type = "date";
                 break;
             case 8:
-                type = 'button';
+                type = "button";
                 break;
             case 9:
-                type = 'datepicker';
+                type = "datepicker";
                 break;
             case 5:
-                type = 'checkbox';
+                type = "checkbox";
                 questionData[4].forEach((row) => {
                     row[1].forEach((choice) => {
-                        if (choice[0] && choice[0] != '')
+                        if (choice[0] && choice[0] != "")
                             choices.push(choice[0]);
                         else otherInput = true;
                     });
                 });
                 break;
             case 6:
-                type = 'checkbox';
+                type = "checkbox";
                 questionData[4].forEach((row) => {
                     row[1].forEach((choice) => {
-                        if (choice[0] && choice[0] != '')
+                        if (choice[0] && choice[0] != "")
                             choices.push(choice[0]);
                         else otherInput = true;
                     });
                 });
                 break;
             case 10:
-                type = 'timepicker';
+                type = "timepicker";
                 break;
             default:
-                type = 'unknown';
+                type = "unknown";
         }
 
         return {
@@ -644,8 +644,8 @@ const getGoogleFormJson = async (url) => {
             minValidation,
             maxValidation,
             description,
-            'data-source': choices.length > 0 ? choices : undefined,
-            otherInput
+            "data-source": choices.length > 0 ? choices : undefined,
+            otherInput,
         };
     });
     return { formTitle, components };
@@ -655,12 +655,15 @@ const validateFlowJson = (flowJson) => {
     // Compile the schema with AJV
     const validate = ajv.compile(schema);
     const isValid = validateFlow(flowJson);
-    logger.info('Is the data valid?', isValid);
+    logger.info("Is the data valid?", isValid);
 
     return isValid;
 };
 
 module.exports = {
+    radioButtonsGroupSchema,
+    checkboxGroupSchema,
+    textInputSchema,
     getGoogleFormJson,
-    validateFlowJson
+    validateFlowJson,
 };
