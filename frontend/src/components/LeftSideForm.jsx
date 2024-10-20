@@ -74,9 +74,8 @@ const options = {
 export const LeftSideForm = () => {
   const [inputValue, setInputValue] = useState('')
   const [showField, setShowField] = useState(true)
-  const [json, setJson] = useState('')
 
-  const { handleGenerateTemplate, handleShowPreview } = useGlobalContext()
+  const { handleGenerateTemplate, handleShowPreview, generatedContent, setGeneratedContent } = useGlobalContext()
   return (
     <Grid2 container paddingInline={'1rem'} spacing={2}>
       <Grid2 item size={12} display={'flex'} alignItems={'center'} justifyContent={'space-between'}>
@@ -125,8 +124,8 @@ export const LeftSideForm = () => {
             options={options}
             height={'50vh'}
             defaultLanguage={'json'}
-            value={json}
-            onChange={value => setJson(value)}
+            value={generatedContent}
+            onChange={value => setGeneratedContent(value)}
           />
         </OutlinedBox>
       </Grid2>

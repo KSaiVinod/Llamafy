@@ -1,13 +1,13 @@
 import { useCreateFlowTemplate } from '@/hooks/useCreateFlowTemplate'
 import { useGenerateJSON } from '@/hooks/useGenerateJson'
+import { useGetGeneratedJson } from '@/hooks/useGetGeneratedJson'
 import { useGeneratePreview } from '@/hooks/useGetPreview'
-import React, { useContext, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 
 export const GlobalContext = React.createContext({
   tokenId: '',
   setTokenId: () => {},
   loadingTemplate: false,
-  handleCreateTemplate: () => {},
   handleGenerateTemplate: () => {},
   generatingContent: false,
   generatedContent: {},
@@ -21,24 +21,24 @@ export const useGlobalContext = () => useContext(GlobalContext)
 
 export const GlboalProvider = ({ children }) => {
   const [tokenId, setTokenId] = useState('')
-  const [generatedContent, setGeneratedContent] = useState({})
-  const { mutate: createFlowTemplate, isLoading: loadingTemplate } = useCreateFlowTemplate()
+  const [requestId, setRequestId] = useState('')
+  const [generatedContent, setGeneratedContent] = useState('')
   const { mutate: generateContent, isLoading: generatingContent } = useGenerateJSON()
   const { data: previewContent, isLoading: loadingPreview, refetch: reloadPreview } = useGeneratePreview(tokenId)
-  const handleCreateTemplate = data => {
-    createFlowTemplate(data, {
-      onSuccess: data => {
-        setTokenId(data?.id)
-      }
-    })
-  }
+  const { data: generatedData, isLoading: loadingGeneratedData } = useGetGeneratedJson(requestId)
+
+  useEffect(() => {
+    if (generatedData?.result?.done) {
+      setGeneratedContent(JSON.stringify(generatedData?.result?.content, null, 4))
+    }
+  }, [JSON.stringify(generatedData)])
 
   const handleGenerateTemplate = value => {
     generateContent(
       { prompt: value },
       {
-        onSuccess: data => {
-          setGeneratedContent(data)
+        onSuccess: ({ data }) => {
+          setRequestId(data?.request_id)
         }
       }
     )
@@ -51,11 +51,10 @@ export const GlboalProvider = ({ children }) => {
   const contextValue = {
     tokenId,
     setTokenId,
-    loadingTemplate,
-    handleCreateTemplate,
     handleGenerateTemplate,
     generatingContent,
     generatedContent,
+    setGeneratedContent,
     handleShowPreview,
     previewContent,
     loadingPreview,
