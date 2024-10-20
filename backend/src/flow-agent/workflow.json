@@ -35,18 +35,20 @@
         "step_3": {
             "validation": {
                 "id": "WF002",
-                "variable": "ai_component"
+                "variable": "ai_component",
+                "save_to": "ajv"
             },
             "next": {
-                "id": "step_3"
+                "id": "step_4"
             }
         },
         "step_4": {
             "bedrock": {
-                "user_message": "I have attached output of fine tuned model and the validation schema. Give me a finaly output that strictly adhers to the ajv schema. Make sure to respond only with JSON : {{I/P}}"
+                "user_message": "You are a Meta FLOW JSON and nodejs expert. I have attached the ajv validation schema. Give me a finaly output that strictly adhers to the ajv schema. Make sure to respond only with JSON {{{input.ajv}}}. This was the user input {{{input.component}}}. Give me only JSON without formatting which strictly passes the ajv validation schema",
+                "save_to": "flow_json"
             },
             "next": {
-                "id": "step_2"
+                "id": "id_3"
             }
         },
         "id_3": {

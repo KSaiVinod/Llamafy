@@ -2,6 +2,11 @@ const Bedrock = require("./bedrock");
 const forms = require("./forms");
 const Tunehq = require("./tunehq");
 const wf = require("./workflow.json");
+const {
+    radioButtonsGroupSchema,
+    checkboxGroupSchema,
+    textInputSchema,
+} = require("../controller/form");
 // const console = require("../helpers/console_helper")("Agentic");
 
 class ProcessWorkflow {
@@ -39,11 +44,22 @@ class ProcessWorkflow {
             const components_extracted = await this.source(wf.workflow.source);
             this.node_id = startid;
             this.ip = {};
+            this.ip.final_flow_json = [];
             for (const i in components_extracted) {
                 this.ip.component = JSON.stringify(components_extracted[i]);
                 await this.process_node(wf.workflow[startid]);
-                break;
+                if (this.ip.flow_json) {
+                    console.log("***************");
+                    console.log("FLOW JSON found");
+
+                    console.log(JSON.parse(this.ip.flow_json));
+                    console.log("***************");
+
+                    this.ip.final_flow_json.push(JSON.parse(this.ip.flow_json));
+                }
             }
+
+            console.log(this.ip.final_flow_json);
 
             /*
             checkck if the Workflow output is Routing then get the details
@@ -97,7 +113,6 @@ class ProcessWorkflow {
     }
 
     async source(source) {
-        console.log(source);
         if (source.form) {
             const scraped = await forms.getGoogleFormJson(source.form);
             this.addtrace("Source", scraped, source);
@@ -132,7 +147,6 @@ class ProcessWorkflow {
                         node = await this.forms(node);
                         break;
                     case "validation":
-                        console.log("validation");
                         node = await this.validator(node);
                         break;
                 }
@@ -195,14 +209,36 @@ class ProcessWorkflow {
     }
 
     async validator(node) {
-        console.log("START");
-        console.log(this.ip);
-        console.log(node);
         switch (this.ip[node.validation.variable]) {
             case "RadioButtonsGroup":
+                this.ip[node.validation.save_to] = JSON.stringify(
+                    radioButtonsGroupSchema
+                );
+                if (node.next) {
+                    this.node_id = node.next.id;
+                    return this.data.workflow[node.next.id];
+                }
+            case "CheckboxGroup":
+                this.ip[node.validation.save_to] =
+                    JSON.stringify(checkboxGroupSchema);
+                if (node.next) {
+                    this.node_id = node.next.id;
+                    return this.data.workflow[node.next.id];
+                }
+
+            case "TextInput":
+                this.ip[node.validation.save_to] =
+                    JSON.stringify(textInputSchema);
+                if (node.next) {
+                    this.node_id = node.next.id;
+                    return this.data.workflow[node.next.id];
+                }
+            default:
+                console.log("*************** ERROR");
                 break;
         }
-        console.log("OOPS");
+
+        console.log("OOPS ***************");
     }
 
     modify_metadata(data, source) {

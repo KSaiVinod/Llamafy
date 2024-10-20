@@ -20,10 +20,8 @@ async function callLlama3API(userMessage, input) {
     // userMessage = userMessage.replace("{{I/P}}", JSON.stringify(input));
 
     const template = handlebars.compile(userMessage);
-    console.log(input, userMessage);
     userMessage = template({ input });
 
-    console.log("***", userMessage);
     // Format the prompt with user input
     const prompt = `
       ${userMessage}
@@ -33,12 +31,12 @@ async function callLlama3API(userMessage, input) {
     const request = {
         prompt,
         max_gen_len: 512, // Optional inference parameters
-        temperature: 0.5,
+        temperature: 0.1,
         top_p: 0.9,
     };
 
     try {
-        console.log("Bedrock Request", request);
+        console.log("Bedrock Request Object :", request);
         // Send the request to the model
         const response = await client.send(
             new InvokeModelCommand({
@@ -51,8 +49,7 @@ async function callLlama3API(userMessage, input) {
         const nativeResponse = JSON.parse(
             new TextDecoder().decode(response.body)
         );
-        console.log("BEDROCK RESPONSE");
-        console.log(nativeResponse);
+        console.log("🚀 Bedrock Request Object :", nativeResponse);
         // Extract the generated text
         const responseText = nativeResponse?.generation;
         if (!responseText) {
@@ -63,11 +60,6 @@ async function callLlama3API(userMessage, input) {
             );
         }
 
-        // Log the full response and return the extracted text
-        console.log(
-            "Full API Response:",
-            JSON.stringify(nativeResponse, null, 2)
-        );
         return responseText.trim();
     } catch (error) {
         if (error.response) {
