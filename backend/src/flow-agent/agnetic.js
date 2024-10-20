@@ -7,13 +7,14 @@ const {
     checkboxGroupSchema,
     textInputSchema,
 } = require("../controller/form");
+const redis = require("../helpers/redis_handler");
 // const console = require("../helpers/console_helper")("Agentic");
 
 class ProcessWorkflow {
     constructor() {
         this.data = {};
         this.payload = {};
-        this.actions = ["bedrock", "forms", "tunehq", "validation"];
+        this.actions = ["bedrock", "forms", "tunehq", "validation", "ajv"];
         this.components = [
             "TextHeading",
             "TextSubheading",
@@ -32,10 +33,11 @@ class ProcessWorkflow {
 
     /* 
     Start process for given  workflow */
-    async process_workflow(wf, rtrace = true, debug = false) {
+    async process_workflow(wf, id, rtrace = true, debug = false) {
         try {
             console.info("Starting Logs");
             this.data = wf;
+            this.unique_key = `Llamafy-${id}`;
             this.output = "NO_OUTPUT_FOUND";
             this.trace = [];
             this.debug = debug;
@@ -49,17 +51,27 @@ class ProcessWorkflow {
                 this.ip.component = JSON.stringify(components_extracted[i]);
                 await this.process_node(wf.workflow[startid]);
                 if (this.ip.flow_json) {
-                    console.log("***************");
-                    console.log("FLOW JSON found");
+                    try {
+                        console.log("***************");
+                        console.log("FLOW JSON found");
+                        console.log(JSON.parse(this.ip.flow_json.trim()));
+                        console.log("***************");
+                        await redis.set(this.unique_key, "COMPLETED");
 
-                    console.log(JSON.parse(this.ip.flow_json));
-                    console.log("***************");
-
-                    this.ip.final_flow_json.push(JSON.parse(this.ip.flow_json));
+                        this.ip.final_flow_json.push(
+                            JSON.parse(this.ip.flow_json.trim())
+                        );
+                    } catch (e) {
+                        ("something went wrong with parsing");
+                    }
                 }
             }
 
             console.log(this.ip.final_flow_json);
+            await redis.set(
+                `${this.unique_key}-COMPLETED`,
+                JSON.stringify(this.ip.flow_json)
+            );
 
             /*
             checkck if the Workflow output is Routing then get the details
@@ -149,6 +161,8 @@ class ProcessWorkflow {
                     case "validation":
                         node = await this.validator(node);
                         break;
+                    case "ajv":
+                        node = await this.ajv(node);
                 }
 
                 await this.process_node(node);
@@ -162,9 +176,34 @@ class ProcessWorkflow {
         }
     }
 
+    async update_progress(node, success = false) {
+        try {
+            if (node.state) {
+                if (success) {
+                    await redis.set(this.unique_key, node.state?.post);
+                    console.log(
+                        `Step Number : ${node.state?.post} | ${JSON.stringify(
+                            this.ip
+                        )}`
+                    );
+                } else {
+                    await redis.set(this.unique_key, node.state?.pre);
+                    console.log(
+                        `Step Number : ${node.state?.pre} | ${JSON.stringify(
+                            this.ip
+                        )}`
+                    );
+                }
+            }
+        } catch (e) {
+            console.error("Error in Updating Progress", e);
+        }
+    }
+
     async bedrock(node) {
         try {
             if (node.bedrock) {
+                await this.update_progress(node.bedrock);
                 const data = await Bedrock.callLlama3API(
                     node.bedrock.user_message,
                     this.ip
@@ -172,6 +211,8 @@ class ProcessWorkflow {
                 this.addtrace("bedrock", data);
                 this.ip[node.bedrock.save_to] = data;
                 this.set_ok_output("bedrock");
+                await this.update_progress(node.bedrock, true);
+
                 if (node.next) {
                     this.node_id = node.next.id;
                     return this.data.workflow[node.next.id];
@@ -181,20 +222,54 @@ class ProcessWorkflow {
         } catch (e) {
             this.log(e);
             this.log(e.message);
-            this.addtrace("error-in-send-message", e.message);
+            this.addtrace("error-in-bedrock-message", e.message);
         }
     }
 
     async tunehq(node) {
         try {
             if (node.tunehq) {
+                await this.update_progress(node.tunehq);
+
                 const data = await Tunehq.callTuneStudioAPI(
                     node.tunehq.messages,
                     node.tunehq.model,
                     this.ip
                 );
-                this.addtrace("bedrock", data);
+                this.addtrace("tunehq", data);
                 this.set_ok_output("bedrock");
+                await this.update_progress(node.tunehq, true);
+
+                if (node.next) {
+                    this.node_id = node.next.id;
+                    return this.data.workflow[node.next.id];
+                }
+            }
+            return false;
+        } catch (e) {
+            this.log(e);
+            this.log(e.message);
+            this.addtrace("error-in-tunehq-message", e.message);
+        }
+    }
+
+    async ajv(node) {
+        try {
+            if (node.ajv) {
+                await this.update_progress(node.ajv);
+
+                const data = await forms.validateComponent(
+                    this.ip.ai_component,
+                    this.ip.flow_json
+                );
+                if (!data.isValid) {
+                    this.ip[node.ajv.failure.save_to] = JSON.stringify(
+                        data.errors
+                    );
+                    return this.data.workflow[node.ajv.failure.next];
+                }
+                await this.update_progress(node.ajv, post);
+
                 if (node.next) {
                     this.node_id = node.next.id;
                     return this.data.workflow[node.next.id];
@@ -209,13 +284,13 @@ class ProcessWorkflow {
     }
 
     async validator(node) {
+        await this.update_progress(node.validation);
+
         switch (this.ip[node.validation.variable]) {
             case "RadioButtonsGroup":
                 this.ip[node.validation.save_to] = JSON.stringify(
                     radioButtonsGroupSchema
                 );
-                console.log("!!!!!");
-                console.log(this.ip);
                 if (node.next) {
                     this.node_id = node.next.id;
                     return this.data.workflow[node.next.id];
@@ -239,7 +314,7 @@ class ProcessWorkflow {
                 console.log("*************** ERROR");
                 break;
         }
-
+        await this.update_progress(node.validation, true);
         console.log("OOPS ***************");
     }
 
@@ -307,7 +382,7 @@ class ProcessWorkflow {
 (async () => {
     try {
         pf = new ProcessWorkflow();
-        const a = await pf.process_workflow(wf);
+        const a = await pf.process_workflow(wf, 1);
     } catch (error) {
         console.error("Error:", error.message);
     }

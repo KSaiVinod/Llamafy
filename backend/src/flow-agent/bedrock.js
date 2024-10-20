@@ -15,66 +15,85 @@ const client = new BedrockRuntimeClient({
     },
 });
 
-// Function to send a prompt to Meta Llama 3 and extract the response
 async function callLlama3API(userMessage, input) {
-    // userMessage = userMessage.replace("{{I/P}}", JSON.stringify(input));
-
     const template = handlebars.compile(userMessage);
     userMessage = template({ input });
 
-    // Format the prompt with user input
     const prompt = `
       ${userMessage}
     `;
 
-    // Prepare the request payload
     const request = {
         prompt,
         max_gen_len: 512, // Optional inference parameters
-        temperature: 0.2,
+        temperature: 0.4,
         top_p: 0.9,
     };
 
-    try {
-        console.log("Bedrock Request Object :", request);
-        // Send the request to the model
-        const response = await client.send(
-            new InvokeModelCommand({
-                contentType: "application/json",
-                body: JSON.stringify(request),
-                modelId: MODEL_ID,
-            })
-        );
-        // Decode and parse the response body
-        const nativeResponse = JSON.parse(
-            new TextDecoder().decode(response.body)
-        );
-        console.log("🚀 Bedrock Request Object :", nativeResponse);
-        // Extract the generated text
-        const responseText = nativeResponse?.generation;
-        if (!responseText) {
-            throw new Error(
-                `No generation found in API response ${JSON.stringify(
-                    nativeResponse
-                )}`
-            );
-        }
+    const maxRetries = 2; // Number of retries
+    const timeoutDuration = 10000; // Timeout duration in milliseconds
 
-        return responseText.trim();
-    } catch (error) {
-        if (error.response) {
-            // API responded with a non-2xx status code
-            throw new Error(
-                `API Error: ${error.response.status} - ${
-                    error.response.data.message || "Unknown Error"
-                }`
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+            // console.log("Bedrock Request Object:", request);
+
+            // Create a timeout promise
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(
+                    () => reject(new Error("Request timed out")),
+                    timeoutDuration
+                )
             );
-        } else if (error.request) {
-            // No response received
-            throw new Error("Network Error: No response from API");
-        } else {
-            // Other errors
-            throw new Error(`Unexpected Error: ${error.message}`);
+
+            // Send the request to the model with a timeout
+            const response = await Promise.race([
+                client.send(
+                    new InvokeModelCommand({
+                        contentType: "application/json",
+                        body: JSON.stringify(request),
+                        modelId: MODEL_ID,
+                    })
+                ),
+                timeoutPromise,
+            ]);
+
+            // Decode and parse the response body
+            const nativeResponse = JSON.parse(
+                new TextDecoder().decode(response.body)
+            );
+            // console.log("🚀 Bedrock Request Object:", nativeResponse);
+
+            // Extract the generated text
+            const responseText = nativeResponse?.generation;
+            if (!responseText) {
+                throw new Error(
+                    `No generation found in API response ${JSON.stringify(
+                        nativeResponse
+                    )}`
+                );
+            }
+
+            return responseText.trim();
+        } catch (error) {
+            if (attempt === maxRetries) {
+                // If we've exhausted all attempts, throw the error
+                if (error.response) {
+                    // API responded with a non-2xx status code
+                    throw new Error(
+                        `API Error: ${error.response.status} - ${
+                            error.response.data.message || "Unknown Error"
+                        }`
+                    );
+                } else if (error.message === "Request timed out") {
+                    throw new Error("Network Error: Request timed out");
+                } else {
+                    // Other errors
+                    throw new Error(`Unexpected Error: ${error.message}`);
+                }
+            }
+            console.log(`Attempt ${attempt + 1} failed: ${error.message}`);
+            // Optionally, you can add a delay before the next retry
+            await new Promise((resolve) => setTimeout(resolve, 1000)); // 1-second delay before retrying
         }
     }
 }

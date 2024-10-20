@@ -7,7 +7,11 @@
         "step_1": {
             "bedrock": {
                 "user_message": "This is the information from a google docs {{{input.component}}}. Give me component name from the given array ['TextHeading', 'TextSubheading', 'TextCaption', 'TextBody', 'RichText', 'TextInput', 'CheckboxGroup', 'RadioButtonsGroup', 'Footer', 'Dropdown', 'DatePicker']. Just give me one word reply from the array. If you can't find something similar in array; response with null. Reply without any spaces",
-                "save_to": "ai_component"
+                "save_to": "ai_component",
+                "state": {
+                    "pre": "Mapping it to the Right Components",
+                    "post": "Step 1 : Component Founds, Turning off Internet!"
+                }
             },
             "next": {
                 "id": "step_3"
@@ -15,7 +19,6 @@
         },
         "step_2": {
             "tunehq": {
-                "id": "WF002",
                 "messages": [
                     {
                         "role": "system",
@@ -26,7 +29,11 @@
                         "content": "Create a flow JSON for Text Input. Respond with only the JSON"
                     }
                 ],
-                "model": "vraj/base0-3-model-h2nlkjzi"
+                "model": "vraj/base0-3-model-h2nlkjzi",
+                "state": {
+                    "pre": "Inferencing our own Fyno's Fine Tuning",
+                    "post": "Step 2 : Fyno Fine Tuning Works"
+                }
             },
             "next": {
                 "id": "step_3"
@@ -34,9 +41,12 @@
         },
         "step_3": {
             "validation": {
-                "id": "WF002",
                 "variable": "ai_component",
-                "save_to": "ajv"
+                "save_to": "ajv",
+                "state": {
+                    "pre": "Creating JSON Schema Validation for the Input Type",
+                    "post": "Step 3 : Checking if the JSON is Valid"
+                }
             },
             "next": {
                 "id": "step_4"
@@ -44,8 +54,41 @@
         },
         "step_4": {
             "bedrock": {
-                "user_message": "You are a JSON and nodejs expert. This is the JSON extracted from google forms {{{input.component}}} Convert this JSON to meta JSON which is provided as a schema in an ajv validation. Transform all the keys according to schema {{{input.ajv}}}. Make sure the output JSON would pass the validation strictly of the ajv schema.  Give me only proper JSON without formatting.",
-                "save_to": "flow_json"
+                "user_message": "You are a JSON and nodejs expert. This is the JSON extracted from google forms {{{input.component}}} Convert this JSON to meta JSON which is provided as a schema in an ajv validation. Transform all the keys according to schema {{{input.ajv}}}. Make sure the output JSON would pass the validation strictly of the ajv schema. If there is id you can add an incremental number or random id. Give me only proper JSON without formatting.",
+                "save_to": "flow_json",
+                "state": {
+                    "pre": "Creating Magic in JSON Land",
+                    "post": "Step 4 : AI Magic is Done"
+                }
+            },
+            "next": {
+                "id": "id_3"
+            }
+        },
+        "step_5": {
+            "ajv": {
+                "key": "ai_component",
+                "failure": {
+                    "next": "step_retry",
+                    "save_to": "ajv_error"
+                },
+                "state": {
+                    "pre": "Verifying if JSON is Fitting",
+                    "post": "Step 5 : All GOOD! AI did some MAGIC!"
+                }
+            },
+            "next": {
+                "id": "id_3"
+            }
+        },
+        "step_retry": {
+            "bedrock": {
+                "user_message": "This is the JSON {{{flow_json}}} with the following AJV {{{input.ajv}}} it is failing with the following error {{{ajv_error}}}. Fix the JSON and give me final JSON.",
+                "save_to": "flow_json",
+                "state": {
+                    "pre": "Error Correcting the JSON",
+                    "post": "Step Retry : Self Correction Done."
+                }
             },
             "next": {
                 "id": "id_3"
