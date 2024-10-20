@@ -644,7 +644,7 @@ const getGoogleFormJson = async (url) => {
             minValidation,
             maxValidation,
             description,
-            choices: choices.length > 0 ? choices : undefined,
+            'data-source': choices.length > 0 ? choices : undefined,
             otherInput
         };
     });
