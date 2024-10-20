@@ -6,6 +6,8 @@ const {
     radioButtonsGroupSchema,
     checkboxGroupSchema,
     textInputSchema,
+    dropdownSchema,
+    datePickerSchema,
 } = require("../controller/form");
 const redis = require("../helpers/redis_handler");
 // const console = require("../helpers/console_helper")("Agentic");
@@ -48,6 +50,7 @@ class ProcessWorkflow {
             this.ip = {};
             this.ip.final_flow_json = [];
             for (const i in components_extracted) {
+                console.log("\n\n\n\n\n", i);
                 this.ip.component = JSON.stringify(components_extracted[i]);
                 await this.process_node(wf.workflow[startid]);
                 if (this.ip.flow_json) {
@@ -56,7 +59,6 @@ class ProcessWorkflow {
                         console.log("FLOW JSON found");
                         console.log(JSON.parse(this.ip.flow_json.trim()));
                         console.log("***************");
-                        await redis.set(this.unique_key, "COMPLETED");
 
                         this.ip.final_flow_json.push(
                             JSON.parse(this.ip.flow_json.trim())
@@ -68,9 +70,39 @@ class ProcessWorkflow {
             }
 
             console.log(this.ip.final_flow_json);
+            let flowData = {
+                version: "5.1",
+                screens: [
+                    {
+                        id: "WELCOME_SCREEN",
+                        layout: {
+                            type: "SingleColumnLayout",
+                            children: [
+                                {
+                                    type: "Footer",
+                                    label: "Complete",
+                                    "on-click-action": {
+                                        name: "complete",
+                                        payload: {},
+                                    },
+                                },
+                            ],
+                        },
+                        title: "Llamafy Demo",
+                        terminal: true,
+                        data: {},
+                    },
+                ],
+            };
+            await redis.set(this.unique_key, "completed");
+
+            this.ip.final_flow_json.map((x) => {
+                flowData.screens[0].layout.children.push(x);
+            });
+
             await redis.set(
-                `${this.unique_key}-COMPLETED`,
-                JSON.stringify(this.ip.flow_json)
+                `${this.unique_key}-completed`,
+                JSON.stringify(flowData)
             );
 
             /*
@@ -306,6 +338,20 @@ class ProcessWorkflow {
             case "TextInput":
                 this.ip[node.validation.save_to] =
                     JSON.stringify(textInputSchema);
+                if (node.next) {
+                    this.node_id = node.next.id;
+                    return this.data.workflow[node.next.id];
+                }
+            case "Dropdown":
+                this.ip[node.validation.save_to] =
+                    JSON.stringify(dropdownSchema);
+                if (node.next) {
+                    this.node_id = node.next.id;
+                    return this.data.workflow[node.next.id];
+                }
+            case "DatePicker":
+                this.ip[node.validation.save_to] =
+                    JSON.stringify(datePickerSchema);
                 if (node.next) {
                     this.node_id = node.next.id;
                     return this.data.workflow[node.next.id];
