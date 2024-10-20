@@ -593,10 +593,10 @@ const getGoogleFormJson = async (url) => {
                 });
                 break;
             case 1:
-                type = 'short-answer';
+                type = 'text-input';
                 break;
             case 0:
-                type = 'paragraph';
+                type = 'text-area';
                 break;
             case 7:
                 type = 'date';
