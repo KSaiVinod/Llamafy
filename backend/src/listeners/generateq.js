@@ -2,6 +2,8 @@ const { Worker } = require('bullmq')
 const EXAMPLE_JSON = require('../data/flow_json')
 const redis_handler = require('../helpers/redis_handler')
 const logger = require('../helpers/logger_helper')('UPLOAD_WORKER')
+const ProcessWorkflow = require('../flow-agent/agnetic')
+const wf = require('../flow-agent/workflow.json')
 
 const connection = {
   port: process.env.REDIS_QUEUE_PORT || 6379,
@@ -54,20 +56,9 @@ const sleep = ms => {
 
 async function processRequest(job) {
   try {
-    await redis_handler.set(`Llamafy-${job?.id}`, 'started')
+    const pw = new ProcessWorkflow()
 
-    await sleep(5000)
-
-    await redis_handler.set(`Llamafy-${job?.id}`, 'stage 1')
-
-    await sleep(5000)
-
-    await redis_handler.set(`Llamafy-${job?.id}`, 'stage 2')
-
-    await sleep(5000)
-
-    await redis_handler.set(`Llamafy-${job?.id}`, 'completed')
-    await redis_handler.set(`Llamafy-${job?.id}-completed`, JSON.stringify(EXAMPLE_JSON))
+    await pw.process_workflow(wf, job?.id)
   } catch (error) {
     console.log('Error while processing requests', error?.message)
   }
